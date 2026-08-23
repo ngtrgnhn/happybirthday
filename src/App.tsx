@@ -54,7 +54,13 @@ export default function App() {
       <Canvas
         dpr={[1, 1.75]}
         camera={{ fov: 42, position: [4.2, 3.4, 7], near: 0.1, far: 60 }}
-        gl={{ antialias: true, powerPreference: "high-performance" }}
+        gl={{
+          antialias: true,
+          alpha: true,
+          stencil: false,
+          powerPreference: "high-performance",
+        }}
+        performance={{ min: 0.55, max: 1.75 }}
         style={{ position: "absolute", inset: 0 }}
       >
         {config && <Experience config={config} />}

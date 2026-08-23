@@ -77,42 +77,117 @@ export function Table() {
   );
 }
 
-/* ---------------- gift boxes ---------------- */
-export function Gifts() {
+/* ---------------- gift boxes (body + lid + cross ribbon + bow) ---------------- */
+function GiftBox({
+  position, size, box, ribbon, rot,
+}: {
+  position: [number, number, number];
+  size: number;
+  box: string;
+  ribbon: string;
+  rot: number;
+}) {
   const grad = useMemo(() => toonGradient(), []);
-  const items = useMemo(
-    () => [
-      { p: [1.62, 0.21, 1.02] as const, s: [0.42, 0.42, 0.42] as const, c: "#8fd9ff", r: 0.4 },
-      { p: [2.02, 0.16, 0.42] as const, s: [0.32, 0.32, 0.32] as const, c: "#ffd166", r: -0.7 },
-      { p: [-1.9, 0.19, 0.85] as const, s: [0.38, 0.38, 0.38] as const, c: "#b79cff", r: 0.9 },
-      { p: [-2.35, 0.14, 0.1] as const, s: [0.28, 0.28, 0.28] as const, c: "#7ee0c3", r: -0.3 },
-    ],
-    []
+  const s = size;
+  const h = s * 0.72;
+  const lidH = s * 0.16;
+  return (
+    <group position={position} rotation={[0, rot, 0]}>
+      {/* body */}
+      <mesh position={[0, h / 2, 0]}>
+        <boxGeometry args={[s, h, s]} />
+        <meshToonMaterial color={box} gradientMap={grad} />
+      </mesh>
+      {/* ribbon cross on body */}
+      <mesh position={[0, h / 2, 0]}>
+        <boxGeometry args={[s * 0.2, h + 0.004, s + 0.006]} />
+        <meshToonMaterial color={ribbon} gradientMap={grad} />
+      </mesh>
+      <mesh position={[0, h / 2, 0]}>
+        <boxGeometry args={[s + 0.006, h + 0.004, s * 0.2]} />
+        <meshToonMaterial color={ribbon} gradientMap={grad} />
+      </mesh>
+      {/* lid */}
+      <mesh position={[0, h + lidH / 2, 0]}>
+        <boxGeometry args={[s * 1.1, lidH, s * 1.1]} />
+        <meshToonMaterial color={box} gradientMap={grad} />
+      </mesh>
+      <mesh position={[0, h + lidH / 2, 0]}>
+        <boxGeometry args={[s * 0.2, lidH + 0.004, s * 1.11]} />
+        <meshToonMaterial color={ribbon} gradientMap={grad} />
+      </mesh>
+      <mesh position={[0, h + lidH / 2, 0]}>
+        <boxGeometry args={[s * 1.11, lidH + 0.004, s * 0.2]} />
+        <meshToonMaterial color={ribbon} gradientMap={grad} />
+      </mesh>
+      {/* bow: two loops + knot */}
+      <group position={[0, h + lidH + 0.02, 0]}>
+        <mesh position={[0.07, 0.03, 0]} rotation={[Math.PI / 2, 0, 0.5]}>
+          <torusGeometry args={[0.065, 0.026, 8, 16]} />
+          <meshToonMaterial color={ribbon} gradientMap={grad} />
+        </mesh>
+        <mesh position={[-0.07, 0.03, 0]} rotation={[Math.PI / 2, 0, -0.5]}>
+          <torusGeometry args={[0.065, 0.026, 8, 16]} />
+          <meshToonMaterial color={ribbon} gradientMap={grad} />
+        </mesh>
+        <mesh position={[0, 0.015, 0]}>
+          <sphereGeometry args={[0.035, 10, 10]} />
+          <meshToonMaterial color={ribbon} gradientMap={grad} />
+        </mesh>
+      </group>
+      <BlobShadow position={[0, 0.006, 0]} scale={s * 2.4} opacity={0.7} />
+    </group>
   );
+}
+
+export function Gifts() {
   return (
     <group>
-      {items.map((it, i) => (
-        <group key={i} position={it.p as unknown as [number, number, number]} rotation={[0, it.r, 0]}>
-          <mesh>
-            <boxGeometry args={it.s as unknown as [number, number, number]} />
-            <meshToonMaterial color={it.c} gradientMap={grad} />
-          </mesh>
-          <mesh>
-            <boxGeometry args={[it.s[0] * 0.22, it.s[1] * 1.02, it.s[2] * 1.02]} />
-            <meshToonMaterial color="#fff4f8" gradientMap={grad} />
-          </mesh>
-          <mesh>
-            <boxGeometry args={[it.s[0] * 1.02, it.s[1] * 1.02, it.s[2] * 0.22]} />
-            <meshToonMaterial color="#fff4f8" gradientMap={grad} />
-          </mesh>
-          <mesh position={[0, it.s[1] / 2 + 0.05, 0]}>
-            <torusGeometry args={[0.07, 0.028, 8, 14]} />
-            <meshToonMaterial color={CANDY.punchDeep} gradientMap={grad} />
-          </mesh>
-          <BlobShadow position={[0, -it.s[1] / 2 + 0.005, 0]} scale={it.s[0] * 2.1} opacity={0.7} />
-        </group>
-      ))}
+      <GiftBox position={[1.75, 0, 1.05]} size={0.5} box="#ffd9e8" ribbon="#fff4f8" rot={0.35} />
+      <GiftBox position={[2.25, 0, 0.4]} size={0.36} box="#ffd166" ribbon="#ff8fc0" rot={-0.55} />
+      <GiftBox position={[-2.0, 0, 0.9]} size={0.44} box="#8fe3c6" ribbon="#fff7ec" rot={0.8} />
+      <GiftBox position={[-2.45, 0, 0.15]} size={0.3} box="#ff9ec6" ribbon="#ffd166" rot={-0.25} />
     </group>
+  );
+}
+
+/* ---------------- soft round rug under the table ---------------- */
+function rugTexture(): THREE.Texture {
+  const c = document.createElement("canvas");
+  c.width = c.height = 512;
+  const x = c.getContext("2d")!;
+  const g = x.createRadialGradient(256, 256, 30, 256, 256, 256);
+  g.addColorStop(0, "#fff0f6");
+  g.addColorStop(1, "#ffd3e5");
+  x.fillStyle = g;
+  x.fillRect(0, 0, 512, 512);
+  x.strokeStyle = "rgba(255,255,255,0.8)";
+  x.lineWidth = 16;
+  x.setLineDash([2, 26]);
+  for (const r of [90, 150, 210]) {
+    x.beginPath();
+    x.arc(256, 256, r, 0, Math.PI * 2);
+    x.stroke();
+  }
+  x.setLineDash([]);
+  x.strokeStyle = "rgba(230,63,133,0.35)";
+  x.lineWidth = 8;
+  x.beginPath();
+  x.arc(256, 256, 244, 0, Math.PI * 2);
+  x.stroke();
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  t.anisotropy = 4;
+  return t;
+}
+
+export function Rug() {
+  const tex = useMemo(() => rugTexture(), []);
+  return (
+    <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.012, 0.35]}>
+      <circleGeometry args={[2.7, 48]} />
+      <meshToonMaterial map={tex} color="#ffffff" />
+    </mesh>
   );
 }
 

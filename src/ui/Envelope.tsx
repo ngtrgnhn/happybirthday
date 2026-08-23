@@ -3,6 +3,7 @@ import type { PartyConfig } from "../config";
 import { useParty } from "../store";
 import { SoftButton } from "./Soft";
 import { HeartIcon, LetterIcon, SparkIcon, ArrowRightIcon } from "./icons";
+import { LetterPaper } from "./LetterPaper";
 
 type Stage = "closed" | "flap" | "fly" | "dissolve" | "reading";
 
@@ -29,6 +30,8 @@ function FloatingHearts() {
           style={{
             left: h.left,
             color: h.color,
+            width: h.size,
+            height: h.size,
             animation: `drift ${h.dur}s linear infinite`,
             animationDelay: `${h.delay}s`,
             ["--o" as string]: h.o,
@@ -36,8 +39,7 @@ function FloatingHearts() {
             opacity: 0,
           }}
         >
-          <HeartIcon className="w-4 h-4" />
-          <span style={{ display: "inline-block", width: h.size }} />
+          <HeartIcon className="h-full w-full" />
         </span>
       ))}
     </div>
@@ -169,6 +171,19 @@ export function Envelope({ config }: { config: PartyConfig }) {
                 className="relative aspect-[3/2.05] rounded-[26px] bg-[linear-gradient(180deg,#f97fb4,#ee5f9f)] soft-shadow overflow-hidden"
                 style={envGone ? { animation: "envelopeMelt .55s ease-in forwards" } : undefined}
               >
+                {/* envelope liner revealed when the flap opens */}
+                <div
+                  className={`absolute inset-x-0 top-0 h-[56%] transition-opacity duration-300 ${
+                    flapOpen ? "opacity-100" : "opacity-0"
+                  }`}
+                  style={{
+                    zIndex: 32,
+                    backgroundColor: "#b23a6f",
+                    backgroundImage:
+                      "radial-gradient(rgba(255,244,248,.35) 2.4px, transparent 2.6px)",
+                    backgroundSize: "20px 20px",
+                  }}
+                />
                 {/* peeking letter */}
                 <div
                   className={`absolute left-[6%] right-[6%] bottom-[8%] transition-all duration-700 ease-[cubic-bezier(.22,1,.36,1)] ${
@@ -198,11 +213,21 @@ export function Envelope({ config }: { config: PartyConfig }) {
                   }}
                 >
                   <div className="absolute inset-0 bg-stripes opacity-60" />
-                  <div className="absolute inset-x-0 bottom-[10%] flex flex-col items-center gap-1 text-white">
-                    <HeartIcon className="w-7 h-7 anim-heart" />
-                    <span className="font-display font-bold text-sm tracking-wide text-soft-shadow">
-                      thư gửi {config.recipient.name}
+                  <div className="absolute inset-x-0 top-[36%] flex flex-col items-center gap-0.5">
+                    <span className="paper-hand !text-[20px] !leading-tight text-[#7c2a50]">
+                      Gửi: {config.recipient.name}
                     </span>
+                    <span className="paper-hand !text-[14px] !leading-tight text-[#7c2a50]/75">
+                      từ: {config.sender.name}
+                    </span>
+                  </div>
+                  <div className="stamp absolute right-[7%] top-[32%] rotate-6">
+                    <div className="stamp-inner flex h-10 w-9 items-center justify-center">
+                      <HeartIcon className="w-4 h-4 text-punch-deep" />
+                    </div>
+                  </div>
+                  <div className="absolute inset-x-0 bottom-[6%] flex justify-center text-white/90">
+                    <HeartIcon className="w-6 h-6 anim-heart" />
                   </div>
                 </div>
 
@@ -264,41 +289,10 @@ export function Envelope({ config }: { config: PartyConfig }) {
                 opacity: reading ? 1 : 0,
               }}
             >
-              <div className="panel-soft soft-shadow rounded-[30px] p-6 md:p-9 -rotate-1 max-h-[62vh] overflow-y-auto scroll-pink">
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <p className="font-body text-[10px] uppercase tracking-[0.22em] text-ink-soft font-semibold">
-                      {config.event.title}
-                    </p>
-                    <h1 className="font-display font-extrabold text-punch-deep text-3xl md:text-4xl mt-1">
-                      {config.letter.heading}
-                    </h1>
-                  </div>
-                  <div className="shrink-0 w-12 h-12 rounded-[14px] border-2 border-dashed border-candy bg-blush/60 flex items-center justify-center text-punch-deep rotate-6">
-                    <HeartIcon className="w-5 h-5" />
-                  </div>
-                </div>
-
-                <p className="mt-5 font-body text-[15px] md:text-base leading-8 text-ink bg-lined-paper pb-2">
-                  {config.letter.body}
-                </p>
-
-                <div className="mt-5 rounded-[20px] bg-[linear-gradient(135deg,#ffe4f0,#ffd9e8)] border border-white px-5 py-4 soft-shadow-sm">
-                  <p className="flex items-center gap-2 font-display font-bold text-punch-deep text-sm uppercase tracking-wide">
-                    <SparkIcon className="w-4 h-4 text-butter" /> Điều ước trong thư
-                  </p>
-                  <p className="mt-1.5 font-body font-medium text-ink leading-7 text-sm md:text-[15px]">
-                    {config.letter.wish}
-                  </p>
-                </div>
-
-                <p className="mt-4 text-xs md:text-sm italic text-ink-soft">{config.letter.ps}</p>
-                <p className="mt-4 text-right font-body font-semibold text-punch-deep text-sm md:text-base">
-                  {config.sender.signature}
-                </p>
-
+              <div className="max-h-[70vh] overflow-y-auto scroll-pink rounded-[12px] -rotate-1">
+                <LetterPaper config={config} />
                 {reading && (
-                  <div className="anim-rise mt-6 flex justify-center" style={{ animationDelay: "250ms" }}>
+                  <div className="anim-rise flex justify-center pb-2 pt-6" style={{ animationDelay: "250ms" }}>
                     <SoftButton onClick={enterParty} variant="primary" pulse ariaLabel="Vào tiệc sinh nhật">
                       Vào tiệc <ArrowRightIcon className="w-4.5 h-4.5" />
                     </SoftButton>
@@ -321,7 +315,7 @@ export function Envelope({ config }: { config: PartyConfig }) {
           </div>
         )}
         {(stage === "flap" || stage === "fly" || stage === "dissolve") && (
-          <p className="font-body text-white/90 text-sm font-medium anim-hint text-center" style={{ animation: "riseIn .5s both" }}>
+          <p className="font-body text-white/95 text-sm font-medium anim-bob text-center text-soft-shadow">
             lá thư đang bay ra...
           </p>
         )}

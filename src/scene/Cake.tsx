@@ -182,6 +182,52 @@ function Drips({ tier, y, color, grad }: { tier: number; y: number; color: strin
   );
 }
 
+/* ---------------- little strawberries on the frosting ---------------- */
+function Strawberries({ grad }: { grad: THREE.Texture }) {
+  const spots = useMemo(() => {
+    const arr: { p: [number, number, number]; s: number; r: number }[] = [];
+    // ring on the bottom tier
+    for (let i = 0; i < 7; i++) {
+      const a = (i / 7) * Math.PI * 2 + 0.3;
+      arr.push({
+        p: [Math.cos(a) * (TIER[0].r - 0.06), PLATE_Y + TIER[0].h + 0.045, Math.sin(a) * (TIER[0].r - 0.06)],
+        s: 0.075 + (i % 3) * 0.008,
+        r: a,
+      });
+    }
+    // a few on the middle tier
+    for (let i = 0; i < 4; i++) {
+      const a = (i / 4) * Math.PI * 2 + 0.8;
+      arr.push({
+        p: [
+          Math.cos(a) * (TIER[1].r - 0.06),
+          PLATE_Y + TIER[0].h + TIER[1].h + 0.04,
+          Math.sin(a) * (TIER[1].r - 0.06),
+        ],
+        s: 0.065,
+        r: a,
+      });
+    }
+    return arr;
+  }, []);
+  return (
+    <group>
+      {spots.map((sp, i) => (
+        <group key={i} position={sp.p} rotation={[0, sp.r, 0]}>
+          <mesh scale={[1, 0.88, 1]}>
+            <sphereGeometry args={[sp.s, 10, 10]} />
+            <meshToonMaterial color="#ff5f7e" gradientMap={grad} />
+          </mesh>
+          <mesh position={[0, sp.s * 0.82, 0]} rotation={[Math.PI, 0, 0]}>
+            <coneGeometry args={[sp.s * 0.55, sp.s * 0.5, 6]} />
+            <meshToonMaterial color="#7bc47f" gradientMap={grad} />
+          </mesh>
+        </group>
+      ))}
+    </group>
+  );
+}
+
 /* ---------------- the whole cake ---------------- */
 export function Cake({ candleCount, age }: { candleCount: number; age: number }) {
   const grad = useMemo(() => toonGradient(), []);
@@ -242,6 +288,7 @@ export function Cake({ candleCount, age }: { candleCount: number; age: number })
       })}
 
       <Sprinkles grad={grad} />
+      <Strawberries grad={grad} />
 
       {/* candles */}
       {positions.map((p, i) => (

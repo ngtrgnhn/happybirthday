@@ -4,7 +4,7 @@ import { Cake } from "./Cake";
 import { Character } from "./Character";
 import {
   Room, Table, Gifts, Balloons, Bunting, FloatingHearts,
-  Sparkles, FallingConfetti, ConfettiBurst,
+  Sparkles, FallingConfetti, ConfettiBurst, Rug,
 } from "./Decor";
 
 export function Experience({ config }: { config: PartyConfig }) {
@@ -21,6 +21,7 @@ export function Experience({ config }: { config: PartyConfig }) {
       <CameraRig />
 
       <Room />
+      <Rug />
       <Table />
       <Cake candleCount={config.cake.candles} age={config.recipient.age} />
       <Character bannerText={config.banner.text} bannerSub={config.banner.sub} />

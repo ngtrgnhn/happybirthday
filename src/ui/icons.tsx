@@ -109,6 +109,15 @@ export function ArrowRightIcon({ className = "w-5 h-5" }: IconProps) {
   );
 }
 
+export function CameraIcon({ className = "w-5 h-5" }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" className={`${base} ${className}`} aria-hidden>
+      <path d="M3 8.5h4l1.8-2.5h6.4L17 8.5h4V19H3z" strokeLinejoin="round" />
+      <circle cx="12" cy="13.4" r="3.4" />
+    </svg>
+  );
+}
+
 export function ChevronDownIcon({ className = "w-5 h-5" }: IconProps) {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" className={`${base} ${className}`} aria-hidden>
