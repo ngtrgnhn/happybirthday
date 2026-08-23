@@ -1,0 +1,38 @@
+{
+  "recipient": {
+    "name": "Hà My",
+    "nickname": "cậu",
+    "age": 18
+  },
+  "sender": {
+    "name": "Tớ",
+    "signature": "— Tớ, người luôn đứng về phía cậu"
+  },
+  "event": {
+    "kicker": "Thiệp mời sinh nhật",
+    "title": "Tiệc sinh nhật của",
+    "date": "20 . 06",
+    "place": "Căn phòng nhỏ màu hồng",
+    "time": "19:30 tối nay"
+  },
+  "letter": {
+    "heading": "Gửi Hà My,",
+    "body": "Hôm nay là ngày của cậu. Tớ đã định viết thật dài, nhưng rồi nhận ra có những điều chỉ cần nói gọn trong một câu. Cảm ơn cậu vì một năm qua đã luôn ở đó — dịu dàng, kiên nhẫn và ấm áp theo cách không ai thay thế được.",
+    "wish": "Điều ước duy nhất tớ gửi vào ngọn nến: mong tuổi mới của cậu luôn rạng rỡ như chính cậu của hôm nay — phần còn lại của thế giới, cứ để tụi tớ lo."
+  },
+  "banner": {
+    "text": "TUỔI MỚI RỰC RỠ NHÉ!",
+    "sub": "thương cậu nhiều hơn hôm qua, ít hơn ngày mai"
+  },
+  "cake": {
+    "candles": 5,
+    "flavor": "kem dâu",
+    "topper": "HB"
+  },
+  "hints": {
+    "approach": "Nhắm mắt, chắp tay — một điều ước đang thành hình...",
+    "closeup": "Hít một hơi thật sâu nào...",
+    "blown": "Điều ước đã bay lên cùng làn khói",
+    "relight": "Ánh lửa nhỏ trở lại, bữa tiệc tiếp tục"
+  }
+}
