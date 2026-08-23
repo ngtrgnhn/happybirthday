@@ -89,23 +89,20 @@ function GiftBox3D({
 export function GiftPicker({ config }: { config: PartyConfig }) {
   const [chosen, setChosen] = useState<number | null>(null);
   const [revealed, setRevealed] = useState(false);
+  const [gift, setGift] = useState<{ title: string; message: string } | null>(null);
   const fireBurst = useParty((s) => s.fireBurst);
 
   const pick = (i: number) => {
     if (chosen !== null) return;
     setChosen(i);
+    // the gift inside is drawn at random — fate decides, once and for all
+    const pool = config.gifts;
+    setGift(pool[Math.floor(Math.random() * pool.length)]);
     window.setTimeout(() => {
       setRevealed(true);
       fireBurst();
     }, 750);
   };
-
-  const reset = () => {
-    setChosen(null);
-    setRevealed(false);
-  };
-
-  const gift = chosen !== null ? config.gifts[chosen] : null;
 
   return (
     <div>
@@ -128,24 +125,17 @@ export function GiftPicker({ config }: { config: PartyConfig }) {
 
       {revealed && gift && (
         <div className="relative mx-auto mt-7 max-w-[440px] rounded-[24px] panel-soft soft-shadow-sm px-6 py-6 text-center anim-pop">
-          <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-punch px-4 py-1 font-display font-bold text-paper text-xs uppercase tracking-wide soft-shadow-sm">
+          <span className="absolute -top-3 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-punch px-4 py-1 font-display font-bold text-paper text-xs uppercase tracking-wide soft-shadow-sm">
             <span className="flex items-center gap-1.5">
-              <GiftIcon className="w-3.5 h-3.5" /> quà của cậu
+              <GiftIcon className="w-3.5 h-3.5" /> định mệnh đã chọn
             </span>
           </span>
           <h4 className="font-display font-extrabold text-punch-deep text-2xl mt-2">{gift.title}</h4>
           <p className="mt-2 font-body text-[15px] text-ink-soft leading-relaxed">{gift.message}</p>
           <p className="mt-3 flex items-center justify-center gap-2 font-body text-xs text-ink-soft/80 italic">
             <HeartIcon className="w-3.5 h-3.5 text-punch anim-heart" />
-            quà thật sẽ đến tay cậu sớm thôi
+            quà ngẫu nhiên, chỉ mở một lần — quà thật sẽ đến tay cậu sớm thôi
           </p>
-          <button
-            type="button"
-            onClick={reset}
-            className="soft-btn mt-4 rounded-full border-2 border-punch/50 bg-white/70 px-5 py-2 font-display font-bold text-punch-deep text-sm"
-          >
-            chọn hộp khác
-          </button>
         </div>
       )}
     </div>

@@ -37,17 +37,18 @@ export default function App() {
     if (phase === "party" && burst === 1) setFlash((f) => f + 1);
   }, [phase, burst]);
 
-  /* ceremony: pin the page on the 3D scene */
+  /* ceremony: hide every piece of main content until the candles are relit */
+  const inCeremony = CEREMONY.includes(phase);
   useEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
-    if (CEREMONY.includes(phase)) {
+    if (inCeremony) {
       el.scrollTo({ top: 0, behavior: "smooth" });
       el.style.overflow = "hidden";
     } else {
       el.style.overflow = "";
     }
-  }, [phase]);
+  }, [inCeremony]);
 
   return (
     <div className="relative w-full h-full bg-[#ffe3ef] overflow-hidden">
@@ -75,14 +76,19 @@ export default function App() {
         }}
       />
 
-      {/* scrollable page: hero(3D) -> letter -> memories -> gifts */}
+      {/* scrollable page: hero(3D) -> letter -> memories -> gifts.
+          fully hidden while the candle ceremony plays out */}
       <div
         ref={scrollRef}
+        id="page-scroller"
+        aria-hidden={inCeremony}
         onScroll={(e) => {
           const el = e.currentTarget;
           scrollState.y = el.scrollTop / Math.max(el.clientHeight, 1);
         }}
-        className="absolute inset-0 z-20 overflow-y-auto overflow-x-hidden scroll-pink"
+        className={`absolute inset-0 z-20 overflow-y-auto overflow-x-hidden scroll-pink transition-opacity duration-500 ease-out ${
+          inCeremony ? "opacity-0 pointer-events-none" : "opacity-100"
+        }`}
       >
         {config && <ScrollSections config={config} />}
       </div>

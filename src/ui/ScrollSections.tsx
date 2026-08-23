@@ -1,30 +1,10 @@
 import { ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import type { PartyConfig } from "../config";
-import { scrollState } from "../scene/CameraRig";
 import { LetterPaper } from "./LetterPaper";
 import { GiftPicker } from "./Gifts";
 import {
   HeartIcon, CakeIcon, ChevronDownIcon, SparkIcon, EnvelopeIcon, GiftIcon, CameraIcon,
 } from "./icons";
-
-/* keep the 3D camera in sync with the page scroll, without re-renders */
-export function useScrollSync() {
-  useEffect(() => {
-    let raf = 0;
-    const onScroll = () => {
-      cancelAnimationFrame(raf);
-      raf = requestAnimationFrame(() => {
-        scrollState.y = window.scrollY / window.innerHeight;
-      });
-    };
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => {
-      window.removeEventListener("scroll", onScroll);
-      cancelAnimationFrame(raf);
-    };
-  }, []);
-}
 
 /* ---------------- scroll reveal ---------------- */
 function Reveal({ children, className = "", delay = 0 }: { children: ReactNode; className?: string; delay?: number }) {
@@ -52,24 +32,65 @@ function Reveal({ children, className = "", delay = 0 }: { children: ReactNode; 
   );
 }
 
+/* scalloped (hand-cut paper) divider, painted with the section behind it */
+const SCALLOP = (() => {
+  const w = 1440;
+  const h = 56;
+  const n = 20;
+  const seg = w / n;
+  let d = `M0 ${h} L0 ${h * 0.5}`;
+  for (let i = 0; i < n; i++) {
+    d += ` Q ${i * seg + seg / 2} ${-h * 0.15} ${(i + 1) * seg} ${h * 0.5}`;
+  }
+  return d + ` L${w} ${h} Z`;
+})();
+
+function Scallop({ fill }: { fill: string }) {
+  return (
+    <svg
+      viewBox="0 0 1440 56"
+      preserveAspectRatio="none"
+      aria-hidden
+      className="pointer-events-none relative -mt-7 block h-7 w-full md:-mt-9 md:h-9"
+    >
+      <path d={SCALLOP} fill={fill} />
+    </svg>
+  );
+}
+
 function SectionHead({
   icon,
   badge,
   title,
   sub,
+  tone = "light",
 }: {
   icon: ReactNode;
   badge: string;
   title: string;
   sub: string;
+  tone?: "light" | "dark";
 }) {
+  const dark = tone === "dark";
   return (
     <Reveal className="mb-8 md:mb-10 text-center">
-      <span className="inline-flex items-center gap-1.5 rounded-full bg-white/75 soft-shadow-sm px-4 py-1.5 font-display font-bold uppercase tracking-[0.16em] text-[11px] text-punch-deep">
+      <span
+        className={`inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 font-display font-bold uppercase tracking-[0.16em] text-[11px] soft-shadow-sm ${
+          dark ? "bg-white/25 text-white backdrop-blur-sm" : "bg-white/75 text-punch-deep"
+        }`}
+      >
         {icon} {badge}
       </span>
-      <h2 className="text-soft-shadow mt-4 font-display font-extrabold text-ink text-3xl md:text-4xl">{title}</h2>
-      <p className="mx-auto mt-2.5 max-w-md px-4 font-body text-sm text-ink-soft md:text-[15px]">{sub}</p>
+      <h2
+        className={`mt-4 font-display font-extrabold text-3xl md:text-4xl ${
+          dark ? "text-white text-soft-shadow" : "text-ink text-soft-shadow"
+        }`}
+      >
+        {title}
+      </h2>
+      <p className={`mx-auto mt-2.5 max-w-md px-4 font-body text-sm md:text-[15px] ${dark ? "text-white/85" : "text-ink-soft"}`}>
+        {sub}
+      </p>
     </Reveal>
   );
 }
@@ -128,12 +149,12 @@ function Memories({ config }: { config: PartyConfig }) {
         {items.map((m, i) => (
           <figure
             key={i}
-            className={`shrink-0 snap-center transition-transform duration-500 ${
-              i === active ? "scale-100" : "scale-[0.93] opacity-80"
+            className={`shrink-0 snap-center transition-all duration-500 ${
+              i === active ? "scale-100" : "scale-[0.93] opacity-75"
             }`}
             style={{ transform: `rotate(${i % 2 === 0 ? -1.4 : 1.2}deg)` }}
           >
-            <div className="w-[74vw] max-w-[300px] rounded-[20px] bg-white p-3 pb-4 soft-shadow-sm sm:w-[300px]">
+            <div className="w-[74vw] max-w-[300px] rounded-[20px] bg-[#fffaf2] p-3 pb-4 sm:w-[300px]" style={{ boxShadow: "0 22px 44px -16px rgba(120,20,70,0.5)" }}>
               <div className="relative overflow-hidden rounded-[12px]">
                 <img
                   src={m.src}
@@ -148,9 +169,10 @@ function Memories({ config }: { config: PartyConfig }) {
                 <span className="absolute right-2 top-2 rounded-full bg-white/85 px-2.5 py-0.5 font-display font-bold text-[11px] text-punch-deep">
                   {i + 1}/{items.length}
                 </span>
+                <span className="tape !h-5 !w-14 -top-1 left-1/2 -translate-x-1/2 -rotate-3" />
               </div>
-              <figcaption className="mt-3 flex items-center justify-center gap-1.5 text-center font-body text-sm font-medium text-ink-soft">
-                <HeartIcon className="w-3.5 h-3.5 shrink-0 text-punch" /> {m.caption}
+              <figcaption className="paper-hand mt-2.5 !text-[17px] !leading-snug text-center text-[#7c2a50]">
+                {m.caption}
               </figcaption>
             </div>
           </figure>
@@ -163,7 +185,7 @@ function Memories({ config }: { config: PartyConfig }) {
           onClick={() => scrollTo(Math.max(0, active - 1))}
           disabled={active === 0}
           aria-label="Ảnh trước"
-          className="soft-btn hidden h-11 w-11 items-center justify-center rounded-full bg-white/85 text-punch-deep soft-shadow-sm disabled:opacity-40 sm:flex"
+          className="soft-btn hidden h-11 w-11 items-center justify-center rounded-full bg-white/90 text-punch-deep soft-shadow-sm disabled:opacity-40 sm:flex"
         >
           <ChevronDownIcon className="h-5 w-5 rotate-90" />
         </button>
@@ -175,7 +197,7 @@ function Memories({ config }: { config: PartyConfig }) {
               aria-label={`Xem ảnh ${i + 1}`}
               onClick={() => scrollTo(i)}
               className={`h-2.5 rounded-full transition-all duration-300 ${
-                i === active ? "w-7 bg-punch" : "w-2.5 bg-candy/70 hover:bg-candy"
+                i === active ? "w-7 bg-white" : "w-2.5 bg-white/50 hover:bg-white/75"
               }`}
             />
           ))}
@@ -185,12 +207,12 @@ function Memories({ config }: { config: PartyConfig }) {
           onClick={() => scrollTo(Math.min(items.length - 1, active + 1))}
           disabled={active === items.length - 1}
           aria-label="Ảnh sau"
-          className="soft-btn hidden h-11 w-11 items-center justify-center rounded-full bg-white/85 text-punch-deep soft-shadow-sm disabled:opacity-40 sm:flex"
+          className="soft-btn hidden h-11 w-11 items-center justify-center rounded-full bg-white/90 text-punch-deep soft-shadow-sm disabled:opacity-40 sm:flex"
         >
           <ChevronDownIcon className="h-5 w-5 -rotate-90" />
         </button>
       </div>
-      <p className="mt-3 text-center font-body text-xs text-ink-soft/80 md:hidden">
+      <p className="mt-3 text-center font-body text-xs text-white/75 md:hidden">
         vuốt sang ngang để xem từng tấm
       </p>
     </div>
@@ -201,29 +223,36 @@ function Memories({ config }: { config: PartyConfig }) {
 export function ScrollSections({ config }: { config: PartyConfig }) {
   return (
     <div className="relative">
-      {/* hero: transparent window onto the 3D scene */}
+      {/* ---------- hero: transparent window onto the 3D scene ---------- */}
       <section className="relative h-full min-h-[540px]">
         <button
           type="button"
-          onClick={() => window.scrollTo({ top: window.innerHeight * 0.92, behavior: "smooth" })}
+          onClick={() =>
+            document
+              .getElementById("page-scroller")
+              ?.scrollTo({ top: window.innerHeight * 0.92, behavior: "smooth" })
+          }
           className="absolute bottom-7 left-1/2 z-10 flex -translate-x-1/2 flex-col items-center gap-1 text-punch-deep"
         >
-          <span className="rounded-full bg-white/80 soft-shadow-sm px-4 py-1.5 font-display font-bold text-[13px]">
+          <span className="rounded-full bg-white/85 soft-shadow-sm px-4 py-1.5 font-display font-bold text-[13px]">
             cuộn xuống đọc thư
           </span>
           <ChevronDownIcon className="anim-bob h-5 w-5" />
         </button>
       </section>
 
-      {/* soft horizon into the page */}
-      <div className="pointer-events-none relative -mt-14 h-14 bg-[linear-gradient(180deg,rgba(255,217,232,0)_0%,#ffd9e8_88%)]" />
-
-      {/* ---------- the letter ---------- */}
-      <section className="relative overflow-hidden bg-[#ffd9e8] px-4 pb-20 pt-8">
-        <div className="bg-dots pointer-events-none absolute inset-0 opacity-40" />
-        <SparkIcon className="anim-floaty pointer-events-none absolute left-[8%] top-10 w-8 h-8 text-white/70" />
-        <span className="anim-floaty pointer-events-none absolute right-[7%] top-24" style={{ ["--r" as string]: "14deg" }}>
-          <HeartIcon className="w-9 h-9 text-punch/40" />
+      {/* ---------- the letter : pale paper-pink world ---------- */}
+      <section className="relative overflow-hidden bg-[#fff1f6] px-4 pb-24 pt-10">
+        <div className="bg-dots-pink pointer-events-none absolute inset-0" />
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-[radial-gradient(ellipse_at_50%_-20%,rgba(255,158,198,0.28),transparent_70%)]" />
+        <span className="anim-floaty pointer-events-none absolute left-[6%] top-16 text-punch/35" style={{ ["--r" as string]: "-10deg" }}>
+          <SparkIcon className="w-8 h-8" />
+        </span>
+        <span className="anim-floaty pointer-events-none absolute right-[7%] top-28 text-punch/30" style={{ ["--r" as string]: "14deg", animationDelay: "-2.2s" }}>
+          <HeartIcon className="w-9 h-9" />
+        </span>
+        <span className="anim-floaty pointer-events-none absolute left-[12%] bottom-16 text-candy/50" style={{ ["--r" as string]: "8deg", animationDelay: "-3.5s" }}>
+          <HeartIcon className="w-6 h-6" />
         </span>
 
         <div className="relative mx-auto max-w-[660px]">
@@ -237,7 +266,7 @@ export function ScrollSections({ config }: { config: PartyConfig }) {
             <LetterPaper config={config} className="-rotate-[0.6deg]" />
           </Reveal>
           <Reveal delay={160}>
-            <div className="mx-auto mt-8 flex max-w-[420px] items-center gap-3 rounded-[18px] bg-white/65 px-4 py-3 soft-shadow-sm">
+            <div className="mx-auto mt-8 flex max-w-[420px] items-center gap-3 rounded-[18px] border border-white bg-white/70 px-4 py-3 soft-shadow-sm">
               <CakeIcon className="w-7 h-7 shrink-0 text-punch-deep" />
               <p className="font-body text-[13px] leading-snug text-ink-soft">
                 đọc xong thì cuộn lên lại, tới gần bánh kem và <b className="text-punch-deep">thổi nến</b> nhé —
@@ -248,10 +277,22 @@ export function ScrollSections({ config }: { config: PartyConfig }) {
         </div>
       </section>
 
-      {/* ---------- memories ---------- */}
-      <section className="relative bg-[#ffeaf3] px-4 pb-20 pt-12">
+      <Scallop fill="#e84a8f" />
+
+      {/* ---------- memories : deep-rose bokeh world ---------- */}
+      <section className="relative overflow-hidden bg-[linear-gradient(178deg,#f97fb4_0%,#e84a8f_72%,#dd3f86_100%)] px-4 pb-24 pt-12">
+        <div className="bg-bokeh pointer-events-none absolute inset-0" />
+        <div className="bg-stripes pointer-events-none absolute inset-0 opacity-25" />
+        <span className="anim-floaty pointer-events-none absolute right-[8%] top-12 text-white/50" style={{ ["--r" as string]: "10deg" }}>
+          <CameraIcon className="w-10 h-10" />
+        </span>
+        <span className="anim-floaty pointer-events-none absolute left-[7%] top-32 text-white/40" style={{ ["--r" as string]: "-12deg", animationDelay: "-1.8s" }}>
+          <HeartIcon className="w-8 h-8" />
+        </span>
+
         <div className="relative mx-auto max-w-[980px]">
           <SectionHead
+            tone="dark"
             icon={<CameraIcon className="w-3.5 h-3.5" />}
             badge="năm qua của tụi mình"
             title="Ảnh kỷ niệm"
@@ -263,15 +304,28 @@ export function ScrollSections({ config }: { config: PartyConfig }) {
         </div>
       </section>
 
-      {/* ---------- gifts ---------- */}
-      <section className="relative overflow-hidden bg-[#ffe1ee] px-4 pb-24 pt-12">
-        <div className="bg-stripes pointer-events-none absolute inset-0 opacity-25" />
+      <Scallop fill="#fff3d8" />
+
+      {/* ---------- gifts : butter candy-shop world ---------- */}
+      <section className="relative overflow-hidden bg-[linear-gradient(180deg,#fff3d8_0%,#ffe9b5_100%)] px-4 pb-28 pt-12">
+        <div className="bg-candy-stripes pointer-events-none absolute inset-0" />
+        <div className="bg-confetti-dots pointer-events-none absolute inset-0 opacity-60" />
+        <span className="anim-floaty pointer-events-none absolute left-[8%] top-14 text-punch/40" style={{ ["--r" as string]: "-14deg" }}>
+          <GiftIcon className="w-9 h-9" />
+        </span>
+        <span className="anim-floaty pointer-events-none absolute right-[9%] top-24 text-butter" style={{ ["--r" as string]: "12deg", animationDelay: "-2.6s" }}>
+          <SparkIcon className="w-8 h-8" />
+        </span>
+        <span className="anim-floaty pointer-events-none absolute right-[16%] bottom-14 text-punch/30" style={{ ["--r" as string]: "6deg", animationDelay: "-4s" }}>
+          <HeartIcon className="w-6 h-6" />
+        </span>
+
         <div className="relative mx-auto max-w-[760px]">
           <SectionHead
             icon={<GiftIcon className="w-3.5 h-3.5" />}
             badge="bí mật nhỏ"
             title="Ba hộp quà"
-            sub="chọn một hộp bằng linh cảm — hai hộp còn lại sẽ biến mất, và đó là lựa chọn của định mệnh"
+            sub="chọn một hộp bằng linh cảm — món quà bên trong là ngẫu nhiên, và chỉ mở được một lần duy nhất"
           />
           <Reveal>
             <GiftPicker config={config} />
@@ -279,14 +333,20 @@ export function ScrollSections({ config }: { config: PartyConfig }) {
         </div>
       </section>
 
-      {/* footer */}
-      <footer className="relative rounded-t-[40px] soft-shadow-up bg-[#ffc6dd] py-9 pb-32 text-center">
-        <p className="flex items-center justify-center gap-2 font-display font-bold text-punch-deep text-sm md:text-base">
-          làm với thật nhiều <HeartIcon className="anim-heart w-4 h-4 text-punch" /> bởi {config.sender.name}
-        </p>
-        <p className="mt-1.5 font-body text-xs text-ink-soft">
-          cuộn lên đầu trang để thổi nến lại bất cứ lúc nào
-        </p>
+      <Scallop fill="#dd3f86" />
+
+      {/* ---------- footer : deep-punch world ---------- */}
+      <footer className="relative overflow-hidden bg-[linear-gradient(180deg,#dd3f86_0%,#c22f70_100%)] px-4 py-12 pb-32 text-center">
+        <div className="bg-dots pointer-events-none absolute inset-0 opacity-25" />
+        <div className="relative">
+          <p className="flex items-center justify-center gap-2 font-display font-bold text-white text-base md:text-lg text-soft-shadow">
+            làm với thật nhiều <HeartIcon className="anim-heart w-5 h-5 text-blush" /> bởi {config.sender.name}
+          </p>
+          <p className="paper-script mt-3 text-2xl text-blush/90">{config.banner.sub}</p>
+          <p className="mt-4 font-body text-xs text-white/75">
+            cuộn lên đầu trang để thổi nến lại bất cứ lúc nào
+          </p>
+        </div>
       </footer>
     </div>
   );

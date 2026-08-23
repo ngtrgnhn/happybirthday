@@ -57,6 +57,30 @@ html, body, #root {
   background-image: radial-gradient(rgba(255, 255, 255, 0.5) 2.2px, transparent 2.4px);
   background-size: 26px 26px;
 }
+.bg-dots-pink {
+  background-image: radial-gradient(rgba(232, 74, 143, 0.16) 2.4px, transparent 2.6px);
+  background-size: 24px 24px;
+}
+.bg-bokeh {
+  background-image:
+    radial-gradient(circle at 12% 22%, rgba(255,255,255,0.20) 0 64px, transparent 65px),
+    radial-gradient(circle at 84% 12%, rgba(255,255,255,0.14) 0 96px, transparent 97px),
+    radial-gradient(circle at 68% 66%, rgba(255,255,255,0.12) 0 74px, transparent 75px),
+    radial-gradient(circle at 22% 84%, rgba(255,255,255,0.16) 0 52px, transparent 53px),
+    radial-gradient(circle at 48% 38%, rgba(255,240,247,0.09) 0 120px, transparent 121px);
+}
+.bg-candy-stripes {
+  background-image: repeating-linear-gradient(
+    -35deg, rgba(255, 158, 198, 0.22) 0 26px, transparent 26px 54px
+  );
+}
+.bg-confetti-dots {
+  background-image:
+    radial-gradient(rgba(255, 209, 138, 0.5) 3px, transparent 3.4px),
+    radial-gradient(rgba(255, 106, 169, 0.35) 2.4px, transparent 2.8px);
+  background-size: 46px 46px, 46px 46px;
+  background-position: 0 0, 23px 23px;
+}
 .bg-stripes {
   background-image: repeating-linear-gradient(
     -45deg, rgba(255, 255, 255, 0.14) 0 14px, transparent 14px 28px
