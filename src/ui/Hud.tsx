@@ -1,214 +1,145 @@
+import { useEffect, useState } from "react";
 import type { PartyConfig } from "../config";
-import { useParty, Phase } from "../store";
-import { CutButton, CutPanel } from "./Cut";
+import { useParty, CEREMONY } from "../store";
+import { SoftButton } from "./Soft";
 import {
-  LetterIcon, SparkIcon, CakeIcon, WindIcon, MatchIcon, CloseIcon, HeartIcon,
+  HeartIcon, CalendarIcon, PinIcon, ClockIcon, FlameIcon,
+  CakeIcon, MatchIcon, WindIcon, ChevronDownIcon, SparkIcon,
 } from "./icons";
-
-const CEREMONY: Phase[] = ["approach", "closeup", "blowing", "blown", "relight"];
-
-function hintFor(phase: Phase, c: PartyConfig): string | null {
-  switch (phase) {
-    case "approach": return c.hints.approach;
-    case "closeup": return c.hints.closeup;
-    case "blowing": return "Phù... phù...";
-    case "blown": return c.hints.blown;
-    case "relight": return c.hints.relight;
-    default: return null;
-  }
-}
-
-function DouseFlash() {
-  const douse = useParty((s) => s.douse);
-  if (!douse) return null;
-  return (
-    <div
-      key={douse}
-      className="fixed inset-0 z-30 pointer-events-none"
-      style={{
-        animation: "douseFlash 1.15s ease-out forwards",
-        background: "radial-gradient(ellipse at 50% 55%, rgba(64,12,42,0.5), rgba(26,4,18,0.82))",
-      }}
-    />
-  );
-}
-
-function LetterModal({ config }: { config: PartyConfig }) {
-  const open = useParty((s) => s.letterOpen);
-  const close = useParty((s) => s.closeLetter);
-  if (!open) return null;
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 md:p-6">
-      <div className="absolute inset-0 bg-ink/60" onClick={close} aria-hidden />
-      <CutPanel
-        className="relative w-[min(94vw,620px)]"
-        inner="flex flex-col overflow-hidden max-h-[84vh]"
-      >
-        {/* tape strips */}
-        <span className="absolute -top-2 left-8 w-20 h-5 bg-candy/80 rotate-[-8deg] z-10" style={{ clipPath: "polygon(4px 0,100% 0,calc(100% - 4px) 100%,0 100%)" }} />
-        <span className="absolute -top-2 right-10 w-16 h-5 bg-butter/80 rotate-[7deg] z-10" style={{ clipPath: "polygon(4px 0,100% 0,calc(100% - 4px) 100%,0 100%)" }} />
-
-        <div className="flex items-center justify-between px-5 md:px-7 pt-5">
-          <p className="font-display font-bold uppercase tracking-[0.18em] text-xs text-punch-deep flex items-center gap-2">
-            <LetterIcon className="w-4 h-4" /> Lá thư nhỏ
-          </p>
-          <button
-            type="button"
-            onClick={close}
-            aria-label="Đóng lá thư"
-            className="btn-cut bg-ink p-[2px]"
-          >
-            <span className="btn-cut block bg-blush text-ink px-2.5 py-2">
-              <CloseIcon className="w-4 h-4" />
-            </span>
-          </button>
-        </div>
-
-        <div className="px-5 md:px-7 py-5 overflow-y-auto scroll-pink bg-lined-paper flex-1 min-h-0">
-          <h2 className="font-display font-extrabold text-2xl md:text-3xl text-ink">
-            {config.letter.heading}
-          </h2>
-          <p className="mt-4 font-body text-[15px] md:text-base leading-7 md:leading-8 text-ink/90">
-            {config.letter.body}
-          </p>
-
-          <div className="mt-6 cut-sm bg-blush p-[2.5px]">
-            <div className="cut-sm bg-paper px-4 py-4 md:px-5">
-              <p className="font-display font-bold uppercase tracking-[0.16em] text-[11px] text-punch-deep flex items-center gap-1.5">
-                <HeartIcon className="w-3.5 h-3.5" /> Điều ước duy nhất
-              </p>
-              <p className="mt-2 font-body italic font-semibold text-[15px] md:text-[17px] leading-7 text-ink">
-                “{config.letter.wish}”
-              </p>
-            </div>
-          </div>
-
-          <p className="mt-6 text-right font-body italic text-sm md:text-[15px] text-ink-soft">
-            {config.sender.signature}
-          </p>
-        </div>
-
-        <div className="px-5 md:px-7 pb-5 pt-1 flex justify-end">
-          <CutButton variant="paper" onClick={close}>Đóng thư</CutButton>
-        </div>
-      </CutPanel>
-    </div>
-  );
-}
 
 export function Hud({ config }: { config: PartyConfig }) {
   const phase = useParty((s) => s.phase);
   const charReady = useParty((s) => s.charReady);
-  const openLetter = useParty((s) => s.openLetter);
   const startApproach = useParty((s) => s.startApproach);
   const requestBlow = useParty((s) => s.requestBlow);
   const requestRelight = useParty((s) => s.requestRelight);
-  const fireBurst = useParty((s) => s.fireBurst);
+  const douse = useParty((s) => s.douse);
+  const [flash, setFlash] = useState(0);
 
-  const inParty = phase === "party";
+  useEffect(() => {
+    if (!douse) return;
+    setFlash((f) => f + 1);
+  }, [douse]);
+
+  if (phase === "loading" || phase === "intro") return null;
+
   const inCeremony = CEREMONY.includes(phase);
-  const hint = hintFor(phase, config);
+  const hint =
+    phase === "approach" ? config.hints.approach :
+    phase === "blowing" ? config.hints.blowing :
+    phase === "blown" ? config.hints.blown :
+    phase === "relight" ? config.hints.relight : "";
 
   return (
     <>
-      <div className="fixed inset-0 z-20 pointer-events-none">
-        {/* ---- top-left: name sticker ---- */}
+      {/* dark flash the moment every flame dies */}
+      {flash > 0 && (
         <div
-          className={`absolute top-4 left-4 md:top-6 md:left-6 max-w-[min(66vw,360px)] transition-all duration-500 ${
-            inParty ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-5 pointer-events-none"
+          key={flash}
+          className="pointer-events-none absolute inset-0 z-50 bg-[#3a0d24]"
+          style={{ animation: "douseFlash 900ms ease-out forwards" }}
+        />
+      )}
+
+      <div className="absolute inset-0 z-30 pointer-events-none">
+        {/* top-left: recipient pill */}
+        <div
+          className={`absolute top-4 left-4 md:top-6 md:left-6 transition-all duration-500 ${
+            inCeremony ? "opacity-0 -translate-x-5 pointer-events-none" : "opacity-100"
           }`}
         >
-          <CutPanel className="-rotate-2" inner="px-4 py-3 md:px-5">
-            <p className="font-display font-bold uppercase tracking-[0.2em] text-[10px] md:text-[11px] text-punch-deep">
-              {config.event.kicker}
+          <div className="soft-shadow-sm rounded-full bg-white/95 border border-blush px-4 py-2.5 md:px-5 md:py-3 flex items-center gap-2.5 -rotate-1">
+            <span className="text-punch anim-heart"><HeartIcon className="w-4.5 h-4.5" /></span>
+            <span className="font-display font-bold text-ink text-sm md:text-base leading-none pt-0.5">
+              Chúc mừng sinh nhật {config.recipient.name}
+            </span>
+          </div>
+          <div className="mt-2 ml-3 flex items-center gap-1.5 text-white/95">
+            <SparkIcon className="w-3.5 h-3.5 text-butter" />
+            <span className="font-display font-bold text-xs md:text-sm text-soft-shadow leading-none">
+              tròn {config.recipient.age} tuổi
+            </span>
+          </div>
+        </div>
+
+        {/* top-right: event ticket */}
+        <div
+          className={`absolute top-4 right-4 md:top-6 md:right-6 transition-all duration-500 ${
+            inCeremony ? "opacity-0 translate-x-5 pointer-events-none" : "opacity-100"
+          }`}
+        >
+          <div className="rounded-[18px] bg-white/95 border-2 border-dashed border-candy soft-shadow-sm px-4 py-2.5 rotate-1 text-right">
+            <p className="flex items-center justify-end gap-1.5 font-body font-semibold text-[11px] md:text-xs text-ink-soft">
+              <CalendarIcon className="w-3.5 h-3.5 text-punch-deep" /> {config.event.date}
             </p>
-            <h1 className="font-display font-extrabold leading-[1.08] text-lg md:text-2xl text-ink mt-0.5">
-              {config.event.title}{" "}
-              <span className="text-punch-deep whitespace-nowrap">{config.recipient.name}</span>
-            </h1>
-          </CutPanel>
-        </div>
-
-        {/* ---- top-right: date ticket ---- */}
-        <div
-          className={`absolute top-4 right-4 md:top-6 md:right-6 transition-all duration-500 delay-75 ${
-            inParty ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-5 pointer-events-none"
-          }`}
-        >
-          <CutPanel cut="cut-ticket" bg="bg-butter" className="rotate-2" inner="px-4 py-2 text-center">
-            <p className="font-display font-extrabold text-base md:text-lg leading-none text-ink">
-              {config.event.date}
+            <p className="flex items-center justify-end gap-1.5 font-body font-semibold text-[11px] md:text-xs text-ink-soft mt-1">
+              <PinIcon className="w-3.5 h-3.5 text-punch-deep" /> {config.event.place}
             </p>
-            <p className="font-body font-semibold text-[10px] md:text-[11px] uppercase tracking-[0.14em] text-ink-soft mt-1">
-              tuổi {config.recipient.age}
-            </p>
-          </CutPanel>
+          </div>
         </div>
 
-        {/* ---- hint chip (ceremony only) ---- */}
-        <div
-          className={`absolute left-1/2 -translate-x-1/2 bottom-[calc(104px+env(safe-area-inset-bottom))] md:bottom-[calc(112px+env(safe-area-inset-bottom))] px-4 w-full flex justify-center transition-all duration-500 ${
-            inCeremony && hint ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4 pointer-events-none"
-          }`}
-        >
-          <p
-            key={hint}
-            className="anim-hint cut-sm bg-ink text-blush font-body font-medium text-[13px] md:text-sm px-4 py-2.5 text-center shadow-soft max-w-[92vw]"
-          >
-            {hint}
-          </p>
-        </div>
+        {/* hint bar */}
+        {inCeremony && hint && (
+          <div className="absolute top-16 md:top-20 inset-x-0 flex justify-center px-4">
+            <div
+              key={phase}
+              className="anim-rise rounded-full bg-[#6b2447]/85 backdrop-blur-sm text-blush font-body font-medium text-xs md:text-sm px-5 py-2.5 text-center soft-shadow-sm"
+            >
+              {hint}
+            </div>
+          </div>
+        )}
 
-        {/* ---- party dock ---- */}
-        <div
-          className={`absolute bottom-0 inset-x-0 flex flex-wrap justify-center gap-2.5 md:gap-3 px-4 pb-[max(20px,env(safe-area-inset-bottom))] transition-all duration-500 ${
-            inParty ? "opacity-100 translate-y-0 pointer-events-auto" : "opacity-0 translate-y-8 pointer-events-none"
-          }`}
-        >
-          <CutButton variant="paper" onClick={openLetter} ariaLabel="Đọc lá thư">
-            <LetterIcon className="w-4.5 h-4.5" /> Lá thư
-          </CutButton>
-          <CutButton variant="butter" onClick={fireBurst} ariaLabel="Bắn pháo giấy">
-            <SparkIcon className="w-4.5 h-4.5" /> Pháo giấy
-          </CutButton>
-          <CutButton variant="primary" onClick={startApproach} ariaLabel="Lại gần bánh kem">
-            <CakeIcon className="w-4.5 h-4.5" /> Lại gần bánh kem
-          </CutButton>
-        </div>
+        {/* bottom-right: scroll-to-letter pill (only when freely browsing) */}
+        {phase === "party" && (
+          <div className="absolute bottom-[max(88px,calc(env(safe-area-inset-bottom)+84px))] right-4 md:right-6 anim-rise" style={{ animationDelay: "400ms" }}>
+            <div className="flex flex-col items-center gap-1 text-white">
+              <span className="font-display font-bold text-xs md:text-sm text-soft-shadow">
+                Cuộn xuống đọc thư
+              </span>
+              <span className="anim-bob text-butter"><ChevronDownIcon className="w-6 h-6" /></span>
+            </div>
+          </div>
+        )}
 
-        {/* ---- ceremony dock ---- */}
+        {/* action dock */}
         <div
           className={`absolute bottom-0 inset-x-0 flex justify-center px-4 pb-[max(20px,env(safe-area-inset-bottom))] transition-all duration-500 ${
-            inCeremony ? "opacity-100 translate-y-0 pointer-events-auto" : "opacity-0 translate-y-8 pointer-events-none"
+            inCeremony || phase === "party" ? "opacity-100 translate-y-0 pointer-events-auto" : "opacity-0 translate-y-8 pointer-events-none"
           }`}
         >
-          {(phase === "approach" || phase === "closeup" || phase === "blowing") && (
-            <CutButton
-              variant="primary"
-              onClick={requestBlow}
-              disabled={!charReady || phase === "blowing"}
-              className="min-w-[210px]"
-              ariaLabel="Thổi nến"
-            >
+          {phase === "party" && (
+            <SoftButton onClick={startApproach} variant="primary" ariaLabel="Lại gần bánh kem">
+              <CakeIcon className="w-5 h-5" /> Lại gần bánh kem
+            </SoftButton>
+          )}
+          {phase === "approach" && !charReady && (
+            <SoftButton disabled variant="white" ariaLabel="Đang tới">
+              <HeartIcon className="w-4.5 h-4.5 text-punch anim-heart" /> Cô bé đang tới...
+            </SoftButton>
+          )}
+          {phase === "approach" && charReady && (
+            <SoftButton onClick={requestBlow} variant="primary" pulse ariaLabel="Thổi nến">
               <WindIcon className="w-5 h-5" /> Thổi nến
-            </CutButton>
+            </SoftButton>
+          )}
+          {phase === "blowing" && (
+            <SoftButton disabled variant="white" ariaLabel="Đang thổi nến">
+              <WindIcon className="w-5 h-5 text-punch-deep" /> Hít sâu... thổi!
+            </SoftButton>
           )}
           {phase === "blown" && (
-            <CutButton
-              variant="primary"
-              onClick={requestRelight}
-              className="min-w-[210px]"
-              ariaLabel="Thắp lại nến"
-            >
+            <SoftButton onClick={requestRelight} variant="butter" ariaLabel="Thắp lại nến">
               <MatchIcon className="w-5 h-5" /> Thắp lại nến
-            </CutButton>
+            </SoftButton>
+          )}
+          {phase === "relight" && (
+            <SoftButton disabled variant="white" ariaLabel="Đang thắp nến">
+              <FlameIcon className="w-4.5 h-4.5 text-butter anim-heart" /> Đang thắp nến...
+            </SoftButton>
           )}
         </div>
-
-        <DouseFlash />
       </div>
-
-      <LetterModal config={config} />
     </>
   );
 }

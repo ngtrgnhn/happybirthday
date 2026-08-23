@@ -1,56 +1,20 @@
 import { useEffect, useRef, useState } from "react";
 import { Canvas } from "@react-three/fiber";
-import { loadConfig, type PartyConfig } from "./config";
-import { useParty } from "./store";
+import { loadConfig, PartyConfig } from "./config";
+import { useParty, CEREMONY } from "./store";
 import { Experience } from "./scene/Experience";
+import { scrollState } from "./scene/CameraRig";
 import { Envelope } from "./ui/Envelope";
 import { Hud } from "./ui/Hud";
+import { ScrollSections } from "./ui/ScrollSections";
 import { HeartIcon } from "./ui/icons";
-
-function LoadingScreen() {
-  return (
-    <div className="fixed inset-0 z-[70] flex flex-col items-center justify-center gap-5 bg-[linear-gradient(168deg,#ff8fc0_0%,#ff5c9e_55%,#e63f85_100%)]">
-      <div className="anim-pop">
-        <span className="cut block bg-ink p-[3px]">
-          <span className="cut block bg-paper w-20 h-20 flex items-center justify-center text-punch-deep" style={{ animation: "pulseGlow 1.6s ease-out infinite" }}>
-            <HeartIcon className="w-10 h-10" />
-          </span>
-        </span>
-      </div>
-      <p className="font-display font-bold uppercase tracking-[0.24em] text-paper text-sm anim-hint">
-        Đang bày tiệc...
-      </p>
-    </div>
-  );
-}
-
-function EnterFlash() {
-  const phase = useParty((s) => s.phase);
-  const [flash, setFlash] = useState(false);
-  const prev = useRef(phase);
-
-  useEffect(() => {
-    if (phase === "party" && prev.current === "intro") {
-      setFlash(true);
-      const t = setTimeout(() => setFlash(false), 950);
-      prev.current = phase;
-      return () => clearTimeout(t);
-    }
-    prev.current = phase;
-  }, [phase]);
-
-  if (!flash) return null;
-  return (
-    <div
-      className="fixed inset-0 z-[60] pointer-events-none bg-paper"
-      style={{ animation: "flashOut 0.95s ease-out forwards" }}
-    />
-  );
-}
 
 export default function App() {
   const [config, setConfig] = useState<PartyConfig | null>(null);
   const phase = useParty((s) => s.phase);
+  const burst = useParty((s) => s.burst);
+  const [flash, setFlash] = useState(0);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     let alive = true;
@@ -68,12 +32,29 @@ export default function App() {
     };
   }, []);
 
+  /* white flash when the party doors open */
+  useEffect(() => {
+    if (phase === "party" && burst === 1) setFlash((f) => f + 1);
+  }, [phase, burst]);
+
+  /* ceremony: pin the page on the 3D scene */
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    if (CEREMONY.includes(phase)) {
+      el.scrollTo({ top: 0, behavior: "smooth" });
+      el.style.overflow = "hidden";
+    } else {
+      el.style.overflow = "";
+    }
+  }, [phase]);
+
   return (
-    <div className="relative w-full h-full overflow-hidden bg-blush">
+    <div className="relative w-full h-full bg-[#ffe3ef] overflow-hidden">
       <Canvas
         dpr={[1, 1.75]}
+        camera={{ fov: 42, position: [4.2, 3.4, 7], near: 0.1, far: 60 }}
         gl={{ antialias: true, powerPreference: "high-performance" }}
-        camera={{ fov: 42, position: [4.2, 3.4, 7], near: 0.1, far: 45 }}
         style={{ position: "absolute", inset: 0 }}
       >
         {config && <Experience config={config} />}
@@ -84,15 +65,46 @@ export default function App() {
         className="pointer-events-none absolute inset-0 z-10"
         style={{
           background:
-            "radial-gradient(ellipse at 50% 42%, transparent 52%, rgba(140,26,84,0.20) 100%)",
+            "radial-gradient(ellipse at 50% 42%, transparent 52%, rgba(140,26,84,0.18) 100%)",
         }}
       />
 
-      {config && phase === "intro" && <Envelope config={config} />}
-      {config && phase !== "intro" && phase !== "loading" && <Hud config={config} />}
+      {/* scrollable page: hero(3D) -> letter -> memories -> gifts */}
+      <div
+        ref={scrollRef}
+        onScroll={(e) => {
+          const el = e.currentTarget;
+          scrollState.y = el.scrollTop / Math.max(el.clientHeight, 1);
+        }}
+        className="absolute inset-0 z-20 overflow-y-auto overflow-x-hidden scroll-pink"
+      >
+        {config && <ScrollSections config={config} />}
+      </div>
 
-      <EnterFlash />
-      {!config && <LoadingScreen />}
+      {config && <Hud config={config} />}
+      {config && phase === "intro" && <Envelope config={config} />}
+
+      {/* loading */}
+      {phase === "loading" && (
+        <div className="absolute inset-0 z-[60] flex flex-col items-center justify-center gap-4 bg-[linear-gradient(168deg,#ffc4dc_0%,#ff9ec6_55%,#f97fb4_100%)]">
+          <div className="w-16 h-16 rounded-full bg-white/90 soft-shadow-sm flex items-center justify-center text-punch-deep anim-heart">
+            <HeartIcon className="w-8 h-8" />
+          </div>
+          <p className="font-display font-bold text-white text-lg text-soft-shadow">
+            Đang chuẩn bị bánh kem...
+          </p>
+        </div>
+      )}
+
+      {/* party-open flash */}
+      {flash > 0 && (
+        <div
+          key={flash}
+          className="pointer-events-none absolute inset-0 z-[55] bg-white"
+          style={{ animation: "flashOut 800ms ease-out forwards" }}
+        />
+      )}
+
     </div>
   );
 }

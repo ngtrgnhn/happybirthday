@@ -109,6 +109,23 @@ export function ArrowRightIcon({ className = "w-5 h-5" }: IconProps) {
   );
 }
 
+export function ChevronDownIcon({ className = "w-5 h-5" }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" className={`${base} ${className}`} aria-hidden>
+      <path d="M5 9.5l7 7 7-7" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+export function GiftIcon({ className = "w-5 h-5" }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" className={`${base} ${className}`} aria-hidden>
+      <path d="M4 11h16v9.5H4zM3 7.5h18V11H3zM12 7.5v13" strokeLinejoin="round" />
+      <path d="M12 7.5s-4.5.3-5.6-1.8c-.9-1.8 1.2-3.3 2.7-2.4 1.6 1 2.9 4.2 2.9 4.2zm0 0s4.5.3 5.6-1.8c.9-1.8-1.2-3.3-2.7-2.4-1.6 1-2.9 4.2-2.9 4.2z" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
 export function WindIcon({ className = "w-5 h-5" }: IconProps) {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" className={`${base} ${className}`} aria-hidden>

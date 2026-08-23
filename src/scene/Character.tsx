@@ -7,7 +7,7 @@ import {
 } from "./constants";
 import { toonGradient, bannerTexture, puffTexture, blobShadowTexture } from "./textures";
 
-type Mode = "hidden" | "walk" | "pray" | "blowReady" | "blow" | "bannerStep" | "banner" | "light";
+type Mode = "hidden" | "walk" | "pray" | "blow" | "banner" | "light";
 type WalkTarget = "stand" | "light" | "banner" | "exit";
 
 const BANNER_STAND = new THREE.Vector3(-0.42, 0, 1.62);
@@ -90,9 +90,6 @@ export function Character({ bannerText, bannerSub }: { bannerText: string; banne
         sim.walkTarget = "stand";
         sim.arrived = false;
         sim.faceY = Math.atan2(CHAR_STAND.x + 1, -(CHAR_STAND.z));
-        break;
-      case "closeup":
-        sim.mode = "blowReady";
         break;
       case "blowing":
         sim.mode = "blow";
@@ -189,11 +186,12 @@ export function Character({ bannerText, bannerSub }: { bannerText: string; banne
 
     /* ----- timed transitions ----- */
     if (sim.mode === "blow") {
-      if (!sim.flamesFired && sim.clock > 0.34) {
+      // 0 -> 0.55s inhale, then the real blow
+      if (!sim.flamesFired && sim.clock > 0.95) {
         sim.flamesFired = true;
         api.getState().onFlamesOut();
       }
-      if (sim.clock > 1.25) {
+      if (sim.clock > 2.15) {
         api.getState().onBannerShown();
       }
     }
@@ -227,16 +225,23 @@ export function Character({ bannerText, bannerSub }: { bannerText: string; banne
       armLy = 0.15; armRy = -0.15;
       headX = 0.24;
       bob = Math.sin(t * 2.2) * 0.012;
-    } else if (sim.mode === "blowReady") {
-      bodyX = 0.26; headX = 0.14;
-      armLx = 0.3; armRx = 0.3; armLz = 0.16; armRz = -0.16;
     } else if (sim.mode === "blow") {
-      bodyX = 0.42 + Math.sin(t * 30) * 0.012;
-      headX = 0.24;
-      armLx = -1.35; armLz = -0.42;
-      armRx = -1.55; armRz = 0.3;
-      openMouth = 1;
-    } else if (sim.mode === "banner" || sim.mode === "bannerStep") {
+      if (sim.clock < 0.55) {
+        // inhale: lean back, chin up, arms relax outward
+        bodyX = -0.1;
+        headX = -0.22;
+        armLx = 0.3; armRx = 0.3;
+        armLz = 0.28; armRz = -0.28;
+        openMouth = 0.12;
+      } else {
+        // blow: lean into the candles
+        bodyX = 0.42 + Math.sin(t * 30) * 0.012;
+        headX = 0.24;
+        armLx = -1.35; armLz = -0.42;
+        armRx = -1.55; armRz = 0.3;
+        openMouth = 1;
+      }
+    } else if (sim.mode === "banner") {
       armLx = -2.5; armRx = -2.5;
       armLz = -0.4; armRz = 0.4;
       headX = -0.1;
@@ -325,7 +330,7 @@ export function Character({ bannerText, bannerSub }: { bannerText: string; banne
     if (puffs.current) {
       const group = puffs.current;
       group.visible = sim.mode === "blow" || puffData.current.some((p) => p.life >= 0);
-      if (sim.mode === "blow" && sim.clock > 0.08) {
+      if (sim.mode === "blow" && sim.clock > 0.6) {
         sim.puffAcc += dt;
         if (sim.puffAcc > 0.06) {
           sim.puffAcc = 0;

@@ -1,28 +1,28 @@
 import { create } from "zustand";
 
 /**
- * Phase machine of the whole experience:
- * loading -> intro (envelope) -> party (3D room)
- * party -> approach (character walks in, prays)
- * approach -> closeup (zoom into candles, 1st "Thổi nến")
- * closeup -> blowing (2nd "Thổi nến", flames out) -> blown (banner)
- * blown -> relight (character relights, walks out) -> party
+ * Phase machine:
+ * loading -> intro (envelope + letter) -> party (3D room + scroll page)
+ * party -> approach (character walks in & prays)
+ * approach --[1 press "Thổi nến"]--> blowing (zoom in, inhale, blow, flames out)
+ * blowing -> blown (banner with wish)
+ * blown -> relight (character relights candles, walks away) -> party
  */
 export type Phase =
   | "loading"
   | "intro"
   | "party"
   | "approach"
-  | "closeup"
   | "blowing"
   | "blown"
   | "relight";
+
+export const CEREMONY: Phase[] = ["approach", "blowing", "blown", "relight"];
 
 interface PartyState {
   phase: Phase;
   charReady: boolean;      // character arrived & praying -> user may blow
   candlesLit: boolean;
-  letterOpen: boolean;
   burst: number;           // increment => confetti cannon fires
   douse: number;           // increment => screen darkens briefly when flames die
   enterParty: () => void;
@@ -34,8 +34,6 @@ interface PartyState {
   requestRelight: () => void;
   onCandlesRelit: () => void;
   finishRelight: () => void;
-  openLetter: () => void;
-  closeLetter: () => void;
   fireBurst: () => void;
 }
 
@@ -43,7 +41,6 @@ export const useParty = create<PartyState>((set, get) => ({
   phase: "loading",
   charReady: false,
   candlesLit: true,
-  letterOpen: false,
   burst: 0,
   douse: 0,
 
@@ -51,15 +48,14 @@ export const useParty = create<PartyState>((set, get) => ({
 
   startApproach: () => {
     if (get().phase !== "party") return;
-    set({ phase: "approach", charReady: false, letterOpen: false });
+    set({ phase: "approach", charReady: false });
   },
 
   onCharacterArrived: () => set({ charReady: true }),
 
   requestBlow: () => {
-    const p = get().phase;
-    if (p === "approach" && get().charReady) set({ phase: "closeup" });
-    else if (p === "closeup") set({ phase: "blowing" });
+    const s = get();
+    if (s.phase === "approach" && s.charReady) set({ phase: "blowing" });
   },
 
   onFlamesOut: () =>
@@ -75,9 +71,6 @@ export const useParty = create<PartyState>((set, get) => ({
   onCandlesRelit: () => set({ candlesLit: true }),
 
   finishRelight: () => set({ phase: "party", charReady: false }),
-
-  openLetter: () => set({ letterOpen: true }),
-  closeLetter: () => set({ letterOpen: false }),
 
   fireBurst: () => set({ burst: get().burst + 1 }),
 }));
