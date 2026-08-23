@@ -195,11 +195,30 @@ html, body, #root {
 .scroll-none::-webkit-scrollbar { display: none; }
 .scroll-none { scrollbar-width: none; }
 
+/* performance: skip rendering offscreen sections until near the viewport */
+.cv {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 900px;
+}
+
+/* classic par-avion airmail border */
+.airmail {
+  background: repeating-linear-gradient(
+    -45deg,
+    #e0508f 0 14px,
+    #fff7ef 14px 28px,
+    #8fb7e8 28px 42px,
+    #fff7ef 42px 56px
+  );
+}
+
 /* ================= realistic letter paper ================= */
 .paper {
   position: relative;
   background-color: #fffaf2;
   background-image:
+    linear-gradient(to bottom, transparent calc(33.3% - 1px), rgba(160, 40, 100, 0.07) 33.3%, transparent calc(33.3% + 2px)),
+    linear-gradient(to bottom, transparent calc(66.6% - 1px), rgba(160, 40, 100, 0.07) 66.6%, transparent calc(66.6% + 2px)),
     linear-gradient(90deg, transparent 0 46px, rgba(230, 63, 133, 0.28) 46px 47.5px, transparent 47.5px),
     repeating-linear-gradient(to bottom, transparent 0 33px, rgba(255, 143, 192, 0.22) 33px 34.5px),
     radial-gradient(ellipse at 30% 12%, rgba(255, 214, 230, 0.28), transparent 55%);
@@ -265,7 +284,7 @@ html, body, #root {
 /* ================= CSS-3D gift boxes ================= */
 .gift-stage { perspective: 950px; }
 .gift {
-  --gw: 148px;
+  --gw: clamp(88px, 23vw, 150px);
   position: relative;
   width: var(--gw);
   height: calc(var(--gw) * 1.06);
@@ -273,7 +292,7 @@ html, body, #root {
   transform: rotateX(-7deg) rotateY(-24deg);
   transition: transform 0.5s cubic-bezier(0.22, 1.4, 0.36, 1), opacity 0.4s ease;
 }
-@media (min-width: 640px) { .gift { --gw: 168px; } }
+@media (min-width: 640px) { .gift { --gw: clamp(130px, 19vw, 168px); } }
 button:hover .gift:not(.open):not(.away) { transform: rotateX(-7deg) rotateY(-9deg) translateY(-9px); }
 .g-base {
   position: absolute; left: 0; right: 0; bottom: 0; height: 62%;

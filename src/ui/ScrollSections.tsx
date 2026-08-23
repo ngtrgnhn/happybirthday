@@ -220,18 +220,21 @@ function Memories({ config }: { config: PartyConfig }) {
 }
 
 /* ---------------- the scroll page ---------------- */
+const goSection = (id: string) => {
+  const el = document.getElementById(id);
+  const sc = document.getElementById("page-scroller");
+  if (!el || !sc) return;
+  sc.scrollTo({ top: el.offsetTop, behavior: "smooth" });
+};
+
 export function ScrollSections({ config }: { config: PartyConfig }) {
   return (
     <div className="relative">
       {/* ---------- hero: transparent window onto the 3D scene ---------- */}
-      <section className="relative h-full min-h-[540px]">
+      <section id="sec-hero" className="relative min-h-screen snap-start" style={{ minHeight: "100dvh" }}>
         <button
           type="button"
-          onClick={() =>
-            document
-              .getElementById("page-scroller")
-              ?.scrollTo({ top: window.innerHeight * 0.92, behavior: "smooth" })
-          }
+          onClick={() => goSection("sec-letter")}
           className="absolute bottom-7 left-1/2 z-10 flex -translate-x-1/2 flex-col items-center gap-1 text-punch-deep"
         >
           <span className="rounded-full bg-white/85 soft-shadow-sm px-4 py-1.5 font-display font-bold text-[13px]">
@@ -242,7 +245,11 @@ export function ScrollSections({ config }: { config: PartyConfig }) {
       </section>
 
       {/* ---------- the letter : pale paper-pink world ---------- */}
-      <section className="relative overflow-hidden bg-[#fff1f6] px-4 pb-24 pt-10">
+      <section
+        id="sec-letter"
+        className="cv relative flex min-h-screen snap-start flex-col justify-center overflow-hidden bg-[#fff1f6] px-4 py-14"
+        style={{ minHeight: "100dvh" }}
+      >
         <div className="bg-dots-pink pointer-events-none absolute inset-0" />
         <div className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-[radial-gradient(ellipse_at_50%_-20%,rgba(255,158,198,0.28),transparent_70%)]" />
         <span className="anim-floaty pointer-events-none absolute left-[6%] top-16 text-punch/35" style={{ ["--r" as string]: "-10deg" }}>
@@ -255,7 +262,7 @@ export function ScrollSections({ config }: { config: PartyConfig }) {
           <HeartIcon className="w-6 h-6" />
         </span>
 
-        <div className="relative mx-auto max-w-[660px]">
+        <div className="relative mx-auto w-full max-w-[660px]">
           <SectionHead
             icon={<EnvelopeIcon className="w-3.5 h-3.5" />}
             badge="phong thư đã mở"
@@ -280,7 +287,11 @@ export function ScrollSections({ config }: { config: PartyConfig }) {
       <Scallop fill="#e84a8f" />
 
       {/* ---------- memories : deep-rose bokeh world ---------- */}
-      <section className="relative overflow-hidden bg-[linear-gradient(178deg,#f97fb4_0%,#e84a8f_72%,#dd3f86_100%)] px-4 pb-24 pt-12">
+      <section
+        id="sec-memories"
+        className="cv relative flex min-h-screen snap-start flex-col justify-center overflow-hidden bg-[linear-gradient(178deg,#f97fb4_0%,#e84a8f_72%,#dd3f86_100%)] px-4 py-14"
+        style={{ minHeight: "100dvh" }}
+      >
         <div className="bg-bokeh pointer-events-none absolute inset-0" />
         <div className="bg-stripes pointer-events-none absolute inset-0 opacity-25" />
         <span className="anim-floaty pointer-events-none absolute right-[8%] top-12 text-white/50" style={{ ["--r" as string]: "10deg" }}>
@@ -290,7 +301,7 @@ export function ScrollSections({ config }: { config: PartyConfig }) {
           <HeartIcon className="w-8 h-8" />
         </span>
 
-        <div className="relative mx-auto max-w-[980px]">
+        <div className="relative mx-auto w-full max-w-[980px]">
           <SectionHead
             tone="dark"
             icon={<CameraIcon className="w-3.5 h-3.5" />}
@@ -307,7 +318,11 @@ export function ScrollSections({ config }: { config: PartyConfig }) {
       <Scallop fill="#fff3d8" />
 
       {/* ---------- gifts : butter candy-shop world ---------- */}
-      <section className="relative overflow-hidden bg-[linear-gradient(180deg,#fff3d8_0%,#ffe9b5_100%)] px-4 pb-28 pt-12">
+      <section
+        id="sec-gifts"
+        className="cv relative flex min-h-screen snap-start flex-col justify-center overflow-hidden bg-[linear-gradient(180deg,#fff3d8_0%,#ffe9b5_100%)] px-4 py-14"
+        style={{ minHeight: "100dvh" }}
+      >
         <div className="bg-candy-stripes pointer-events-none absolute inset-0" />
         <div className="bg-confetti-dots pointer-events-none absolute inset-0 opacity-60" />
         <span className="anim-floaty pointer-events-none absolute left-[8%] top-14 text-punch/40" style={{ ["--r" as string]: "-14deg" }}>
@@ -320,7 +335,7 @@ export function ScrollSections({ config }: { config: PartyConfig }) {
           <HeartIcon className="w-6 h-6" />
         </span>
 
-        <div className="relative mx-auto max-w-[760px]">
+        <div className="relative mx-auto w-full max-w-[760px]">
           <SectionHead
             icon={<GiftIcon className="w-3.5 h-3.5" />}
             badge="bí mật nhỏ"
@@ -335,17 +350,29 @@ export function ScrollSections({ config }: { config: PartyConfig }) {
 
       <Scallop fill="#dd3f86" />
 
-      {/* ---------- footer : deep-punch world ---------- */}
-      <footer className="relative overflow-hidden bg-[linear-gradient(180deg,#dd3f86_0%,#c22f70_100%)] px-4 py-12 pb-32 text-center">
+      {/* ---------- footer : deep-punch closing card ---------- */}
+      <footer className="cv relative flex min-h-[60vh] snap-start flex-col items-center justify-center overflow-hidden bg-[linear-gradient(180deg,#dd3f86_0%,#c22f70_100%)] px-4 py-16 text-center">
         <div className="bg-dots pointer-events-none absolute inset-0 opacity-25" />
+        <span className="anim-floaty pointer-events-none absolute left-[12%] top-1/4 text-blush/40" style={{ ["--r" as string]: "-10deg" }}>
+          <HeartIcon className="w-10 h-10" />
+        </span>
+        <span className="anim-floaty pointer-events-none absolute right-[10%] bottom-1/4 text-blush/30" style={{ ["--r" as string]: "12deg", animationDelay: "-2.4s" }}>
+          <HeartIcon className="w-8 h-8" />
+        </span>
         <div className="relative">
-          <p className="flex items-center justify-center gap-2 font-display font-bold text-white text-base md:text-lg text-soft-shadow">
+          <p className="paper-script text-3xl md:text-4xl text-blush/95">{config.banner.sub}</p>
+          <p className="mt-5 flex items-center justify-center gap-2 font-display font-bold text-white text-base md:text-lg text-soft-shadow">
             làm với thật nhiều <HeartIcon className="anim-heart w-5 h-5 text-blush" /> bởi {config.sender.name}
           </p>
-          <p className="paper-script mt-3 text-2xl text-blush/90">{config.banner.sub}</p>
-          <p className="mt-4 font-body text-xs text-white/75">
-            cuộn lên đầu trang để thổi nến lại bất cứ lúc nào
-          </p>
+          <button
+            type="button"
+            onClick={() => {
+              document.getElementById("page-scroller")?.scrollTo({ top: 0, behavior: "smooth" });
+            }}
+            className="soft-btn mt-7 inline-flex items-center gap-2 rounded-full bg-white/90 px-6 py-3 font-display font-bold text-punch-deep text-sm soft-shadow-sm"
+          >
+            <ChevronDownIcon className="h-4 w-4 rotate-180" /> thổi nến lại từ đầu
+          </button>
         </div>
       </footer>
     </div>

@@ -86,7 +86,7 @@ export default function App() {
           const el = e.currentTarget;
           scrollState.y = el.scrollTop / Math.max(el.clientHeight, 1);
         }}
-        className={`absolute inset-0 z-20 overflow-y-auto overflow-x-hidden scroll-pink transition-opacity duration-500 ease-out ${
+        className={`absolute inset-0 z-20 overflow-y-auto overflow-x-hidden scroll-pink snap-y snap-proximity overscroll-none transition-opacity duration-500 ease-out ${
           inCeremony ? "opacity-0 pointer-events-none" : "opacity-100"
         }`}
       >

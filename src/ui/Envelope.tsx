@@ -168,8 +168,11 @@ export function Envelope({ config }: { config: PartyConfig }) {
               }}
             >
               <div
-                className="relative aspect-[3/2.05] rounded-[26px] bg-[linear-gradient(180deg,#f97fb4,#ee5f9f)] soft-shadow overflow-hidden"
+                className="airmail relative rounded-[30px] p-[9px] soft-shadow"
                 style={envGone ? { animation: "envelopeMelt .55s ease-in forwards" } : undefined}
+              >
+              <div
+                className="relative aspect-[3/2.05] overflow-hidden rounded-[22px] bg-[linear-gradient(180deg,#f97fb4,#ee5f9f)]"
               >
                 {/* envelope liner revealed when the flap opens */}
                 <div
@@ -269,6 +272,7 @@ export function Envelope({ config }: { config: PartyConfig }) {
                     </span>
                   </button>
                 )}
+              </div>
               </div>
             </div>
           )}

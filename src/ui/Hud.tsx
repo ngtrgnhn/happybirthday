@@ -7,6 +7,112 @@ import {
   CakeIcon, MatchIcon, WindIcon, ChevronDownIcon, SparkIcon,
 } from "./icons";
 
+/* ---------- vertical dot navigation across the full-screen sections ---------- */
+const SECTIONS = [
+  { id: "sec-hero", label: "bánh kem" },
+  { id: "sec-letter", label: "lá thư" },
+  { id: "sec-memories", label: "ảnh kỷ niệm" },
+  { id: "sec-gifts", label: "hộp quà" },
+];
+
+function SectionDots() {
+  const [active, setActive] = useState(0);
+  useEffect(() => {
+    const sc = document.getElementById("page-scroller");
+    if (!sc) return;
+    let raf = 0;
+    const onScroll = () => {
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(() => {
+        const mid = sc.scrollTop + sc.clientHeight * 0.5;
+        let idx = 0;
+        SECTIONS.forEach((s, i) => {
+          const el = document.getElementById(s.id);
+          if (el && el.offsetTop <= mid) idx = i;
+        });
+        setActive((a) => (a === idx ? a : idx));
+      });
+    };
+    sc.addEventListener("scroll", onScroll, { passive: true });
+    onScroll();
+    return () => {
+      sc.removeEventListener("scroll", onScroll);
+      cancelAnimationFrame(raf);
+    };
+  }, []);
+  const go = (id: string) => {
+    const el = document.getElementById(id);
+    const sc = document.getElementById("page-scroller");
+    if (el && sc) sc.scrollTo({ top: el.offsetTop, behavior: "smooth" });
+  };
+  return (
+    <nav
+      aria-label="Điều hướng các mục"
+      className="absolute right-3 top-1/2 z-30 hidden -translate-y-1/2 flex-col items-end gap-3 sm:flex md:right-5"
+    >
+      {SECTIONS.map((s, i) => (
+        <button
+          key={s.id}
+          type="button"
+          onClick={() => go(s.id)}
+          aria-label={`Tới mục ${s.label}`}
+          className="group flex items-center gap-2"
+        >
+          <span
+            className={`rounded-full bg-white soft-shadow-sm transition-all duration-300 ${
+              i === active ? "w-2.5 h-7" : "w-2.5 h-2.5 opacity-60 group-hover:opacity-90"
+            }`}
+          />
+          <span
+            className={`pointer-events-none max-w-0 overflow-hidden whitespace-nowrap font-display font-bold text-[11px] text-white text-soft-shadow transition-all duration-300 ${
+              i === active ? "max-w-[110px] opacity-100" : "opacity-0 group-hover:max-w-[110px] group-hover:opacity-80"
+            }`}
+          >
+            {s.label}
+          </span>
+        </button>
+      ))}
+    </nav>
+  );
+}
+
+/* ---------- ceremony progress steps ---------- */
+function CeremonySteps({ phase, charReady }: { phase: string; charReady: boolean }) {
+  const steps = ["lại gần", "cầu nguyện", "thổi nến", "điều ước"];
+  const idx =
+    phase === "approach" ? (charReady ? 1 : 0) :
+    phase === "blowing" ? 2 :
+    phase === "blown" ? 3 : -1;
+  if (idx < 0) return null;
+  return (
+    <div className="mb-3 flex items-center justify-center gap-2.5">
+      {steps.map((s, i) => (
+        <span key={s} className="flex items-center gap-2.5">
+          <span
+            className={`flex items-center gap-1.5 rounded-full px-2.5 py-1 font-display font-bold text-[10px] uppercase tracking-wide transition-all duration-400 ${
+              i === idx
+                ? "bg-white text-punch-deep soft-shadow-sm scale-105"
+                : i < idx
+                ? "bg-white/45 text-white"
+                : "bg-white/20 text-white/70"
+            }`}
+          >
+            <span
+              className={`h-1.5 w-1.5 rounded-full ${
+                i === idx ? "bg-punch anim-heart" : i < idx ? "bg-white" : "bg-white/50"
+              }`}
+            />
+            {s}
+          </span>
+          {i < steps.length - 1 && (
+            <span className={`h-px w-3 ${i < idx ? "bg-white/70" : "bg-white/25"}`} />
+          )}
+        </span>
+      ))}
+    </div>
+  );
+}
+
 export function Hud({ config }: { config: PartyConfig }) {
   const phase = useParty((s) => s.phase);
   const charReady = useParty((s) => s.charReady);
@@ -102,12 +208,16 @@ export function Hud({ config }: { config: PartyConfig }) {
           </div>
         )}
 
+        {/* section dots while freely browsing the page */}
+        {!inCeremony && phase === "party" && <SectionDots />}
+
         {/* action dock */}
         <div
-          className={`absolute bottom-0 inset-x-0 flex justify-center px-4 pb-[max(20px,env(safe-area-inset-bottom))] transition-all duration-500 ${
+          className={`absolute bottom-0 inset-x-0 flex flex-col items-center px-4 pb-[max(20px,env(safe-area-inset-bottom))] transition-all duration-500 ${
             inCeremony || phase === "party" ? "opacity-100 translate-y-0 pointer-events-auto" : "opacity-0 translate-y-8 pointer-events-none"
           }`}
         >
+          {inCeremony && <CeremonySteps phase={phase} charReady={charReady} />}
           {phase === "party" && (
             <SoftButton onClick={startApproach} variant="primary" ariaLabel="Lại gần bánh kem">
               <CakeIcon className="w-5 h-5" /> Lại gần bánh kem
