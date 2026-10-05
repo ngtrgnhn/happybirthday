@@ -293,23 +293,13 @@ export function Envelope({ config }: { config: PartyConfig }) {
               }}
             >
               {reading ? (
-                <button
-                  type="button"
+                <div
                   onClick={enterParty}
                   className="relative max-h-[70vh] overflow-y-auto scroll-pink rounded-[12px] -rotate-1 cursor-pointer hover:scale-[1.02] transition-transform duration-300 w-full"
-                  aria-label="Nhấn vào thư để vào tiệc"
                 >
                   <LetterPaper config={config} />
                   <div className="absolute inset-0 bg-gradient-to-t from-punch-deep/20 via-transparent to-transparent pointer-events-none" />
-                  <div className="absolute bottom-4 right-4 anim-rise" style={{ animationDelay: "400ms" }}>
-                    <div className="flex items-center gap-2 bg-white/90 rounded-full px-4 py-2 soft-shadow-sm">
-                      <HeartIcon className="w-5 h-5 text-punch-deep anim-heart" />
-                      <span className="font-body text-sm text-punch-deep font-bold">
-                        vào tiệc
-                      </span>
-                    </div>
-                  </div>
-                </button>
+                </div>
               ) : (
                 <div className="relative max-h-[70vh] overflow-y-auto scroll-pink rounded-[12px] -rotate-1">
                   <LetterPaper config={config} />
