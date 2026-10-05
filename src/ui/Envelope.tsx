@@ -296,16 +296,18 @@ export function Envelope({ config }: { config: PartyConfig }) {
               <div className="relative max-h-[70vh] overflow-y-auto scroll-pink rounded-[12px] -rotate-1">
                 <LetterPaper config={config} />
                 {reading && (
-                  <div className="anim-rise absolute bottom-4 right-4 flex flex-col items-center gap-1" style={{ animationDelay: "250ms" }}>
+                  <div className="anim-rise absolute bottom-6 right-6 flex flex-col items-center gap-2" style={{ animationDelay: "400ms" }}>
                     <button
                       type="button"
                       onClick={enterParty}
                       aria-label="Vào tiệc sinh nhật"
-                      className="soft-btn group relative flex items-center justify-center w-14 h-14 rounded-full bg-white/90 soft-shadow-sm anim-ring"
+                      className="group relative flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-white to-blush soft-shadow-lg anim-ring hover:scale-110 transition-transform duration-300"
+                      style={{ animation: "pulseRing 2s ease-out infinite, heartBeat 1.6s ease-in-out infinite" }}
                     >
-                      <HeartIcon className="w-7 h-7 text-punch-deep anim-heart group-hover:scale-110 transition-transform" />
+                      <HeartIcon className="w-8 h-8 text-punch-deep group-hover:scale-125 transition-transform duration-300" />
+                      <span className="absolute inset-0 rounded-full bg-punch/20 animate-ping" />
                     </button>
-                    <span className="font-body text-xs text-white/90 text-soft-shadow font-medium">
+                    <span className="font-body text-sm text-white text-soft-shadow font-bold bg-punch-deep/80 px-3 py-1 rounded-full">
                       nhấn để vào tiệc
                     </span>
                   </div>
