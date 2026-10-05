@@ -293,13 +293,21 @@ export function Envelope({ config }: { config: PartyConfig }) {
                 opacity: reading ? 1 : 0,
               }}
             >
-              <div className="max-h-[70vh] overflow-y-auto scroll-pink rounded-[12px] -rotate-1">
+              <div className="relative max-h-[70vh] overflow-y-auto scroll-pink rounded-[12px] -rotate-1">
                 <LetterPaper config={config} />
                 {reading && (
-                  <div className="anim-rise flex justify-center pb-2 pt-6" style={{ animationDelay: "250ms" }}>
-                    <SoftButton onClick={enterParty} variant="primary" pulse ariaLabel="Vào tiệc sinh nhật">
-                      Vào tiệc <ArrowRightIcon className="w-4.5 h-4.5" />
-                    </SoftButton>
+                  <div className="anim-rise absolute bottom-4 right-4 flex flex-col items-center gap-1" style={{ animationDelay: "250ms" }}>
+                    <button
+                      type="button"
+                      onClick={enterParty}
+                      aria-label="Vào tiệc sinh nhật"
+                      className="soft-btn group relative flex items-center justify-center w-14 h-14 rounded-full bg-white/90 soft-shadow-sm anim-ring"
+                    >
+                      <HeartIcon className="w-7 h-7 text-punch-deep anim-heart group-hover:scale-110 transition-transform" />
+                    </button>
+                    <span className="font-body text-xs text-white/90 text-soft-shadow font-medium">
+                      nhấn để vào tiệc
+                    </span>
                   </div>
                 )}
               </div>
