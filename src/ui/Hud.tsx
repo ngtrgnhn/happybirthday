@@ -217,14 +217,6 @@ export function Hud({ config }: { config: PartyConfig }) {
           }`}
         >
           {inCeremony && <CeremonySteps phase={phase} charReady={charReady} />}
-          {phase === "party" && (
-            <div className="flex flex-col items-center gap-2 anim-rise">
-              <span className="font-body text-xs md:text-sm text-white/90 text-soft-shadow text-center">
-                nhấn vào bánh kem để lại gần
-              </span>
-              <CakeIcon className="w-5 h-5 text-butter anim-bob" />
-            </div>
-          )}
           {phase === "approach" && !charReady && (
             <SoftButton disabled variant="white" ariaLabel="Đang tới">
               <HeartIcon className="w-4.5 h-4.5 text-punch anim-heart" /> Cô bé đang tới...

@@ -528,3 +528,194 @@ export function ConfettiBurst() {
     </instancedMesh>
   );
 }
+
+/* ---------------- flower decorations around table ---------------- */
+function Flower({ position, color, scale = 1 }: { position: [number, number, number]; color: string; scale?: number }) {
+  const grad = useMemo(() => toonGradient(), []);
+  return (
+    <group position={position} scale={scale}>
+      {/* petals */}
+      {[0, 1, 2, 3, 4].map((i) => (
+        <mesh key={i} position={[Math.cos((i * Math.PI * 2) / 5) * 0.08, 0, Math.sin((i * Math.PI * 2) / 5) * 0.08]} rotation={[Math.PI / 2, 0, (i * Math.PI * 2) / 5]}>
+          <sphereGeometry args={[0.06, 8, 8]} />
+          <meshToonMaterial color={color} gradientMap={grad} />
+        </mesh>
+      ))}
+      {/* center */}
+      <mesh>
+        <sphereGeometry args={[0.04, 8, 8]} />
+        <meshToonMaterial color={CANDY.butter} gradientMap={grad} />
+      </mesh>
+    </group>
+  );
+}
+
+export function FlowerDecorations() {
+  const flowers = useMemo(() => [
+    { pos: [1.5, 0.05, 1.2] as [number, number, number], color: CANDY.candy, scale: 1.2 },
+    { pos: [-1.6, 0.05, 1.0] as [number, number, number], color: CANDY.punch, scale: 1.0 },
+    { pos: [1.8, 0.05, -0.5] as [number, number, number], color: "#b79cff", scale: 0.9 },
+    { pos: [-1.9, 0.05, -0.3] as [number, number, number], color: CANDY.mint, scale: 1.1 },
+    { pos: [0.8, 0.05, 1.8] as [number, number, number], color: CANDY.butter, scale: 0.8 },
+    { pos: [-0.9, 0.05, 1.7] as [number, number, number], color: "#ff9d7e", scale: 1.0 },
+  ], []);
+
+  return (
+    <group>
+      {flowers.map((f, i) => (
+        <Flower key={i} position={f.pos} color={f.color} scale={f.scale} />
+      ))}
+    </group>
+  );
+}
+
+/* ---------------- table settings: plates and utensils ---------------- */
+export function TableSettings() {
+  const grad = useMemo(() => toonGradient(), []);
+  const plates = useMemo(() => [
+    { pos: [0.85, TABLE_H + 0.01, 0.7] as [number, number, number], rot: 0.3 },
+    { pos: [-0.85, TABLE_H + 0.01, 0.7] as [number, number, number], rot: -0.3 },
+    { pos: [0.95, TABLE_H + 0.01, -0.6] as [number, number, number], rot: 0.5 },
+    { pos: [-0.95, TABLE_H + 0.01, -0.6] as [number, number, number], rot: -0.5 },
+  ], []);
+
+  return (
+    <group>
+      {plates.map((p, i) => (
+        <group key={i} position={p.pos} rotation={[0, p.rot, 0]}>
+          {/* plate */}
+          <mesh>
+            <cylinderGeometry args={[0.22, 0.22, 0.02, 24]} />
+            <meshToonMaterial color="#ffffff" gradientMap={grad} />
+          </mesh>
+          <mesh position={[0, 0.01, 0]}>
+            <cylinderGeometry args={[0.18, 0.18, 0.015, 24]} />
+            <meshToonMaterial color={CANDY.blush} gradientMap={grad} />
+          </mesh>
+          {/* fork */}
+          <mesh position={[0.28, 0.015, 0]} rotation={[0, 0, Math.PI / 2]}>
+            <boxGeometry args={[0.015, 0.18, 0.008]} />
+            <meshToonMaterial color="#d4d4d4" gradientMap={grad} />
+          </mesh>
+          {/* knife */}
+          <mesh position={[-0.28, 0.015, 0]} rotation={[0, 0, Math.PI / 2]}>
+            <boxGeometry args={[0.015, 0.2, 0.008]} />
+            <meshToonMaterial color="#d4d4d4" gradientMap={grad} />
+          </mesh>
+        </group>
+      ))}
+    </group>
+  );
+}
+
+/* ---------------- small decorative candles ---------------- */
+export function SmallCandles() {
+  const grad = useMemo(() => toonGradient(), []);
+  const candles = useMemo(() => [
+    { pos: [1.3, TABLE_H + 0.08, 0.2] as [number, number, number], color: CANDY.candy },
+    { pos: [-1.3, TABLE_H + 0.08, 0.2] as [number, number, number], color: CANDY.mint },
+    { pos: [0.5, TABLE_H + 0.08, -1.0] as [number, number, number], color: CANDY.butter },
+    { pos: [-0.5, TABLE_H + 0.08, -1.0] as [number, number, number], color: "#b79cff" },
+  ], []);
+
+  return (
+    <group>
+      {candles.map((c, i) => (
+        <group key={i} position={c.pos}>
+          <mesh>
+            <cylinderGeometry args={[0.04, 0.04, 0.16, 12]} />
+            <meshToonMaterial color={c.color} gradientMap={grad} />
+          </mesh>
+          <mesh position={[0, 0.1, 0]}>
+            <coneGeometry args={[0.02, 0.06, 8]} />
+            <meshBasicMaterial color="#ffb066" />
+          </mesh>
+          <pointLight position={[0, 0.12, 0]} color="#ffb066" intensity={0.3} distance={1.5} decay={2} />
+        </group>
+      ))}
+    </group>
+  );
+}
+
+/* ---------------- floating bubbles ---------------- */
+export function Bubbles() {
+  const COUNT = 25;
+  const mesh = useRef<THREE.InstancedMesh>(null);
+  const data = useMemo(
+    () =>
+      Array.from({ length: COUNT }, () => ({
+        x: (Math.random() * 2 - 1) * 4,
+        y: Math.random() * 5,
+        z: (Math.random() * 2 - 1) * 4,
+        sp: 0.2 + Math.random() * 0.3,
+        size: 0.08 + Math.random() * 0.12,
+        ph: Math.random() * Math.PI * 2,
+      })),
+    []
+  );
+
+  useFrame((state, dt) => {
+    if (!mesh.current) return;
+    const t = state.clock.elapsedTime;
+    const m = new THREE.Matrix4();
+    data.forEach((d, i) => {
+      d.y += d.sp * dt;
+      if (d.y > 6) d.y = -0.5;
+      const x = d.x + Math.sin(t * 0.5 + d.ph) * 0.3;
+      m.compose(
+        new THREE.Vector3(x, d.y, d.z),
+        new THREE.Quaternion(),
+        new THREE.Vector3(d.size, d.size, d.size)
+      );
+      mesh.current!.setMatrixAt(i, m);
+    });
+    mesh.current.instanceMatrix.needsUpdate = true;
+  });
+
+  return (
+    <instancedMesh ref={mesh} args={[undefined, undefined, COUNT]} frustumCulled={false}>
+      <sphereGeometry args={[1, 12, 12]} />
+      <meshBasicMaterial color="#ffffff" transparent opacity={0.4} />
+    </instancedMesh>
+  );
+}
+
+/* ---------------- twinkling stars ---------------- */
+export function TwinklingStars() {
+  const COUNT = 40;
+  const mesh = useRef<THREE.InstancedMesh>(null);
+  const data = useMemo(
+    () =>
+      Array.from({ length: COUNT }, () => ({
+        x: (Math.random() * 2 - 1) * 6,
+        y: 2 + Math.random() * 4,
+        z: (Math.random() * 2 - 1) * 6,
+        ph: Math.random() * Math.PI * 2,
+        sp: 1 + Math.random() * 2,
+      })),
+    []
+  );
+
+  useFrame((state) => {
+    if (!mesh.current) return;
+    const t = state.clock.elapsedTime;
+    const m = new THREE.Matrix4();
+    data.forEach((d, i) => {
+      const scale = 0.03 + Math.abs(Math.sin(t * d.sp + d.ph)) * 0.04;
+      m.compose(
+        new THREE.Vector3(d.x, d.y, d.z),
+        new THREE.Quaternion(),
+        new THREE.Vector3(scale, scale, scale)
+      );
+      mesh.current!.setMatrixAt(i, m);
+    });
+    mesh.current.instanceMatrix.needsUpdate = true;
+  });
+
+  return (
+    <instancedMesh ref={mesh} args={[undefined, undefined, COUNT]} frustumCulled={false}>
+      <sphereGeometry args={[1, 6, 6]} />
+      <meshBasicMaterial color="#fff4d6" />
+    </instancedMesh>
+  );
+}

@@ -293,26 +293,29 @@ export function Envelope({ config }: { config: PartyConfig }) {
                 opacity: reading ? 1 : 0,
               }}
             >
-              <div className="relative max-h-[70vh] overflow-y-auto scroll-pink rounded-[12px] -rotate-1">
-                <LetterPaper config={config} />
-                {reading && (
-                  <div className="anim-rise absolute bottom-6 right-6 flex flex-col items-center gap-2" style={{ animationDelay: "400ms" }}>
-                    <button
-                      type="button"
-                      onClick={enterParty}
-                      aria-label="Vào tiệc sinh nhật"
-                      className="group relative flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-white to-blush soft-shadow-lg anim-ring hover:scale-110 transition-transform duration-300"
-                      style={{ animation: "pulseRing 2s ease-out infinite, heartBeat 1.6s ease-in-out infinite" }}
-                    >
-                      <HeartIcon className="w-8 h-8 text-punch-deep group-hover:scale-125 transition-transform duration-300" />
-                      <span className="absolute inset-0 rounded-full bg-punch/20 animate-ping" />
-                    </button>
-                    <span className="font-body text-sm text-white text-soft-shadow font-bold bg-punch-deep/80 px-3 py-1 rounded-full">
-                      nhấn để vào tiệc
-                    </span>
+              {reading ? (
+                <button
+                  type="button"
+                  onClick={enterParty}
+                  className="relative max-h-[70vh] overflow-y-auto scroll-pink rounded-[12px] -rotate-1 cursor-pointer hover:scale-[1.02] transition-transform duration-300 w-full"
+                  aria-label="Nhấn vào thư để vào tiệc"
+                >
+                  <LetterPaper config={config} />
+                  <div className="absolute inset-0 bg-gradient-to-t from-punch-deep/20 via-transparent to-transparent pointer-events-none" />
+                  <div className="absolute bottom-4 right-4 anim-rise" style={{ animationDelay: "400ms" }}>
+                    <div className="flex items-center gap-2 bg-white/90 rounded-full px-4 py-2 soft-shadow-sm">
+                      <HeartIcon className="w-5 h-5 text-punch-deep anim-heart" />
+                      <span className="font-body text-sm text-punch-deep font-bold">
+                        vào tiệc
+                      </span>
+                    </div>
                   </div>
-                )}
-              </div>
+                </button>
+              ) : (
+                <div className="relative max-h-[70vh] overflow-y-auto scroll-pink rounded-[12px] -rotate-1">
+                  <LetterPaper config={config} />
+                </div>
+              )}
             </div>
           </div>
         )}
