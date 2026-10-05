@@ -116,7 +116,6 @@ function CeremonySteps({ phase, charReady }: { phase: string; charReady: boolean
 export function Hud({ config }: { config: PartyConfig }) {
   const phase = useParty((s) => s.phase);
   const charReady = useParty((s) => s.charReady);
-  const startApproach = useParty((s) => s.startApproach);
   const requestBlow = useParty((s) => s.requestBlow);
   const requestRelight = useParty((s) => s.requestRelight);
   const douse = useParty((s) => s.douse);
@@ -219,9 +218,12 @@ export function Hud({ config }: { config: PartyConfig }) {
         >
           {inCeremony && <CeremonySteps phase={phase} charReady={charReady} />}
           {phase === "party" && (
-            <SoftButton onClick={startApproach} variant="primary" ariaLabel="Lại gần bánh kem">
-              <CakeIcon className="w-5 h-5" /> Lại gần bánh kem
-            </SoftButton>
+            <div className="flex flex-col items-center gap-2 anim-rise">
+              <span className="font-body text-xs md:text-sm text-white/90 text-soft-shadow text-center">
+                nhấn vào bánh kem để lại gần
+              </span>
+              <CakeIcon className="w-5 h-5 text-butter anim-bob" />
+            </div>
           )}
           {phase === "approach" && !charReady && (
             <SoftButton disabled variant="white" ariaLabel="Đang tới">
