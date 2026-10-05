@@ -32,6 +32,7 @@ export function Room() {
   const wallTex = useMemo(() => wallTexture(), []);
   const rayTex = useMemo(() => raysTexture(), []);
   const rays = useRef<THREE.Mesh>(null);
+  const grad = useMemo(() => toonGradient(), []);
 
   useFrame((state, dt) => {
     if (rays.current) rays.current.rotation.z += dt * 0.045;
@@ -51,6 +52,80 @@ export function Room() {
         <circleGeometry args={[6.2, 48]} />
         <meshBasicMaterial map={rayTex} transparent opacity={0.5} depthWrite={false} />
       </mesh>
+      
+      {/* Curtains on sides */}
+      <mesh position={[-5.5, 4, -6.2]}>
+        <boxGeometry args={[1.2, 8, 0.1]} />
+        <meshToonMaterial color={CANDY.punch} gradientMap={grad} />
+      </mesh>
+      <mesh position={[5.5, 4, -6.2]}>
+        <boxGeometry args={[1.2, 8, 0.1]} />
+        <meshToonMaterial color={CANDY.punch} gradientMap={grad} />
+      </mesh>
+      
+      {/* Curtain rods */}
+      <mesh position={[0, 8.1, -6.1]}>
+        <cylinderGeometry args={[0.08, 0.08, 12, 12]} />
+        <meshToonMaterial color={CANDY.choco} gradientMap={grad} />
+      </mesh>
+      <mesh position={[-6.1, 8.1, -6.1]} rotation={[0, 0, Math.PI / 2]}>
+        <sphereGeometry args={[0.12, 8, 8]} />
+        <meshToonMaterial color={CANDY.choco} gradientMap={grad} />
+      </mesh>
+      <mesh position={[6.1, 8.1, -6.1]} rotation={[0, 0, Math.PI / 2]}>
+        <sphereGeometry args={[0.12, 8, 8]} />
+        <meshToonMaterial color={CANDY.choco} gradientMap={grad} />
+      </mesh>
+      
+      {/* Window frame (decorative) */}
+      <mesh position={[0, 5.5, -6.5]}>
+        <boxGeometry args={[4, 4, 0.15]} />
+        <meshToonMaterial color="#ffffff" gradientMap={grad} />
+      </mesh>
+      <mesh position={[0, 5.5, -6.45]}>
+        <boxGeometry args={[3.6, 3.6, 0.1]} />
+        <meshBasicMaterial color="#ffe9f3" />
+      </mesh>
+      <mesh position={[0, 5.5, -6.4]}>
+        <boxGeometry args={[0.1, 3.6, 0.08]} />
+        <meshToonMaterial color="#ffffff" gradientMap={grad} />
+      </mesh>
+      <mesh position={[0, 5.5, -6.4]}>
+        <boxGeometry args={[3.6, 0.1, 0.08]} />
+        <meshToonMaterial color="#ffffff" gradientMap={grad} />
+      </mesh>
+    </group>
+  );
+}
+
+/* ---------------- hanging lights ---------------- */
+export function HangingLights() {
+  const grad = useMemo(() => toonGradient(), []);
+  const lights = useMemo(() => [
+    { pos: [-2.5, 6, -2] as [number, number, number], color: CANDY.butter },
+    { pos: [2.5, 6.2, -2] as [number, number, number], color: CANDY.mint },
+    { pos: [-1.5, 5.8, 1.5] as [number, number, number], color: CANDY.candy },
+    { pos: [1.5, 6.1, 1.5] as [number, number, number], color: "#b79cff" },
+  ], []);
+
+  return (
+    <group>
+      {lights.map((l, i) => (
+        <group key={i} position={l.pos}>
+          {/* string */}
+          <mesh position={[0, 0.5, 0]}>
+            <cylinderGeometry args={[0.01, 0.01, 1, 6]} />
+            <meshBasicMaterial color={CANDY.ink} />
+          </mesh>
+          {/* bulb */}
+          <mesh>
+            <sphereGeometry args={[0.15, 12, 12]} />
+            <meshToonMaterial color={l.color} gradientMap={grad} />
+          </mesh>
+          {/* glow */}
+          <pointLight position={[0, 0, 0]} color={l.color} intensity={0.5} distance={3} decay={2} />
+        </group>
+      ))}
     </group>
   );
 }

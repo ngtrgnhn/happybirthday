@@ -1,10 +1,9 @@
 import { useEffect, useState } from "react";
 import type { PartyConfig } from "../config";
 import { useParty, CEREMONY } from "../store";
-import { SoftButton } from "./Soft";
 import {
   HeartIcon, CalendarIcon, PinIcon, ClockIcon, FlameIcon,
-  CakeIcon, MatchIcon, WindIcon, ChevronDownIcon, SparkIcon,
+  MatchIcon, WindIcon, ChevronDownIcon, SparkIcon,
 } from "./icons";
 
 /* ---------- vertical dot navigation across the full-screen sections ---------- */
@@ -210,37 +209,44 @@ export function Hud({ config }: { config: PartyConfig }) {
         {/* section dots while freely browsing the page */}
         {!inCeremony && phase === "party" && <SectionDots />}
 
-        {/* action dock */}
+        {/* action dock - chỉ hiển thị ceremony steps và hint */}
         <div
           className={`absolute bottom-0 inset-x-0 flex flex-col items-center px-4 pb-[max(20px,env(safe-area-inset-bottom))] transition-all duration-500 ${
-            inCeremony || phase === "party" ? "opacity-100 translate-y-0 pointer-events-auto" : "opacity-0 translate-y-8 pointer-events-none"
+            inCeremony || phase === "party" ? "opacity-100 translate-y-0 pointer-events-none" : "opacity-0 translate-y-8 pointer-events-none"
           }`}
         >
           {inCeremony && <CeremonySteps phase={phase} charReady={charReady} />}
+          
+          {/* Hint text đơn giản */}
           {phase === "approach" && !charReady && (
-            <SoftButton disabled variant="white" ariaLabel="Đang tới">
-              <HeartIcon className="w-4.5 h-4.5 text-punch anim-heart" /> Cô bé đang tới...
-            </SoftButton>
+            <div className="mt-3 flex items-center gap-2 bg-white/90 rounded-full px-4 py-2 soft-shadow-sm anim-rise">
+              <HeartIcon className="w-4 h-4 text-punch anim-heart" />
+              <span className="font-body text-sm text-ink-soft font-medium">cô bé đang tới...</span>
+            </div>
           )}
           {phase === "approach" && charReady && (
-            <SoftButton onClick={requestBlow} variant="primary" pulse ariaLabel="Thổi nến">
-              <WindIcon className="w-5 h-5" /> Thổi nến
-            </SoftButton>
+            <div className="mt-3 flex items-center gap-2 bg-punch-deep/90 rounded-full px-4 py-2 soft-shadow-sm anim-rise">
+              <WindIcon className="w-4 h-4 text-white" />
+              <span className="font-body text-sm text-white font-medium">nhấn vào bánh kem để thổi nến</span>
+            </div>
           )}
           {phase === "blowing" && (
-            <SoftButton disabled variant="white" ariaLabel="Đang thổi nến">
-              <WindIcon className="w-5 h-5 text-punch-deep" /> Hít sâu... thổi!
-            </SoftButton>
+            <div className="mt-3 flex items-center gap-2 bg-white/90 rounded-full px-4 py-2 soft-shadow-sm anim-rise">
+              <WindIcon className="w-4 h-4 text-punch-deep anim-bob" />
+              <span className="font-body text-sm text-ink-soft font-medium">hít sâu... thổi!</span>
+            </div>
           )}
           {phase === "blown" && (
-            <SoftButton onClick={requestRelight} variant="butter" ariaLabel="Thắp lại nến">
-              <MatchIcon className="w-5 h-5" /> Thắp lại nến
-            </SoftButton>
+            <div className="mt-3 flex items-center gap-2 bg-butter/90 rounded-full px-4 py-2 soft-shadow-sm anim-rise">
+              <MatchIcon className="w-4 h-4 text-ink" />
+              <span className="font-body text-sm text-ink font-medium">nhấn vào bánh kem để thắp lại nến</span>
+            </div>
           )}
           {phase === "relight" && (
-            <SoftButton disabled variant="white" ariaLabel="Đang thắp nến">
-              <FlameIcon className="w-4.5 h-4.5 text-butter anim-heart" /> Đang thắp nến...
-            </SoftButton>
+            <div className="mt-3 flex items-center gap-2 bg-white/90 rounded-full px-4 py-2 soft-shadow-sm anim-rise">
+              <FlameIcon className="w-4 h-4 text-butter anim-heart" />
+              <span className="font-body text-sm text-ink-soft font-medium">đang thắp nến...</span>
+            </div>
           )}
         </div>
       </div>

@@ -152,16 +152,17 @@ function Sprinkles({ grad }: { grad: THREE.Texture }) {
 function Drips({ tier, y, color, grad }: { tier: number; y: number; color: string; grad: THREE.Texture }) {
   const mesh = useRef<THREE.InstancedMesh>(null);
   const r = TIER[tier].r + 0.005;
-  const count = tier === 0 ? 18 : 13;
+  const count = tier === 0 ? 24 : tier === 1 ? 18 : 14;
   const data = useMemo(() => {
     const ms: THREE.Matrix4[] = [];
     for (let i = 0; i < count; i++) {
       const a = (i / count) * Math.PI * 2 + (tier * 0.5);
-      const len = 0.1 + ((i * 37 + tier * 13) % 10) / 10 * 0.16;
+      const len = 0.08 + ((i * 37 + tier * 13) % 10) / 10 * 0.2;
+      const width = 0.035 + ((i * 23 + tier * 7) % 5) / 5 * 0.02;
       const m = new THREE.Matrix4().compose(
         new THREE.Vector3(Math.cos(a) * r, y - len / 2 + 0.01, Math.sin(a) * r),
         new THREE.Quaternion(),
-        new THREE.Vector3(1, len, 1)
+        new THREE.Vector3(width / 0.042, len, width / 0.042)
       );
       ms.push(m);
     }
@@ -178,6 +179,40 @@ function Drips({ tier, y, color, grad }: { tier: number; y: number; color: strin
     <instancedMesh ref={mesh} args={[undefined, undefined, count]} frustumCulled={false}>
       <cylinderGeometry args={[0.042, 0.052, 1, 8]} />
       <meshToonMaterial color={color} gradientMap={grad} />
+    </instancedMesh>
+  );
+}
+
+/* ---------------- frosting border rings ---------------- */
+function FrostingBorder({ tier, y, grad }: { tier: number; y: number; grad: THREE.Texture }) {
+  const r = TIER[tier].r;
+  const count = tier === 0 ? 20 : tier === 1 ? 16 : 12;
+  const mesh = useRef<THREE.InstancedMesh>(null);
+  
+  const data = useMemo(() => {
+    const ms: THREE.Matrix4[] = [];
+    for (let i = 0; i < count; i++) {
+      const a = (i / count) * Math.PI * 2;
+      const m = new THREE.Matrix4().compose(
+        new THREE.Vector3(Math.cos(a) * (r - 0.02), y, Math.sin(a) * (r - 0.02)),
+        new THREE.Quaternion(),
+        new THREE.Vector3(1, 1, 1)
+      );
+      ms.push(m);
+    }
+    return ms;
+  }, [count, r, y]);
+
+  useEffect(() => {
+    if (!mesh.current) return;
+    data.forEach((m, i) => mesh.current!.setMatrixAt(i, m));
+    mesh.current.instanceMatrix.needsUpdate = true;
+  }, [data]);
+
+  return (
+    <instancedMesh ref={mesh} args={[undefined, undefined, count]} frustumCulled={false}>
+      <sphereGeometry args={[0.045, 8, 8]} />
+      <meshToonMaterial color="#ffffff" gradientMap={grad} />
     </instancedMesh>
   );
 }
@@ -283,6 +318,7 @@ export function Cake({ candleCount, age }: { candleCount: number; age: number })
               <meshToonMaterial color={capColors[i]} gradientMap={grad} />
             </mesh>
             <Drips tier={i} y={baseY + t.h - 0.035} color={capColors[i]} grad={grad} />
+            <FrostingBorder tier={i} y={baseY + 0.02} grad={grad} />
           </group>
         );
       })}

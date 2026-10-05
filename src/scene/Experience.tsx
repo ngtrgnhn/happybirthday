@@ -9,20 +9,31 @@ import {
   Room, Table, Gifts, Balloons, Bunting, FloatingHearts,
   Sparkles, FallingConfetti, ConfettiBurst, Rug,
   FlowerDecorations, TableSettings, SmallCandles, Bubbles, TwinklingStars,
+  HangingLights,
 } from "./Decor";
 
 function CakeHitArea() {
   const gl = useThree((s) => s.gl);
   const phase = useParty((s) => s.phase);
+  const charReady = useParty((s) => s.charReady);
   const startApproach = useParty((s) => s.startApproach);
+  const requestBlow = useParty((s) => s.requestBlow);
+  const requestRelight = useParty((s) => s.requestRelight);
   const cursorRef = useRef(false);
 
   const handleClick = () => {
-    if (phase === "party") startApproach();
+    if (phase === "party") {
+      startApproach();
+    } else if (phase === "approach" && charReady) {
+      requestBlow();
+    } else if (phase === "blown") {
+      requestRelight();
+    }
   };
 
   const handlePointerOver = () => {
-    if (phase === "party" && !cursorRef.current) {
+    const clickable = phase === "party" || (phase === "approach" && charReady) || phase === "blown";
+    if (clickable && !cursorRef.current) {
       gl.domElement.style.cursor = "pointer";
       cursorRef.current = true;
     }
@@ -84,6 +95,7 @@ export function Experience({ config }: { config: PartyConfig }) {
       <ConfettiBurst />
       <Bubbles />
       <TwinklingStars />
+      <HangingLights />
     </>
   );
 }
