@@ -88,12 +88,22 @@ function merge(base: PartyConfig, over: unknown): PartyConfig {
   for (const key of Object.keys(base) as (keyof PartyConfig)[]) {
     const bv = (base as any)[key];
     const ov = o[key];
+    // Prioritize config.json values over defaults
     if (Array.isArray(bv)) {
-      out[key] = Array.isArray(ov) && ov.length ? ov : bv;
-    } else if (bv && typeof bv === "object") {
-      out[key] = { ...bv, ...(ov && typeof ov === "object" ? ov : {}) };
+      out[key] = Array.isArray(ov) && ov.length > 0 ? ov : bv;
+    } else if (bv && typeof bv === "object" && !Array.isArray(bv)) {
+      // Deep merge objects
+      out[key] = { ...bv };
+      if (ov && typeof ov === "object" && !Array.isArray(ov)) {
+        for (const subKey of Object.keys(bv)) {
+          if (ov[subKey] !== undefined && ov[subKey] !== null) {
+            out[key][subKey] = ov[subKey];
+          }
+        }
+      }
     } else {
-      out[key] = ov !== undefined && ov !== null ? ov : bv;
+      // For primitive values, use config.json if present
+      out[key] = (ov !== undefined && ov !== null && ov !== "") ? ov : bv;
     }
   }
   return out as PartyConfig;
@@ -101,11 +111,24 @@ function merge(base: PartyConfig, over: unknown): PartyConfig {
 
 export async function loadConfig(): Promise<PartyConfig> {
   try {
-    const res = await fetch("config.json", { cache: "no-cache" });
+    // Add timestamp to bypass cache completely
+    const timestamp = Date.now();
+    console.log("Loading config.json with timestamp:", timestamp);
+    const res = await fetch(`config.json?t=${timestamp}`, { 
+      cache: "no-store",
+      headers: {
+        "Cache-Control": "no-cache, no-store, must-revalidate",
+        "Pragma": "no-cache"
+      }
+    });
     if (!res.ok) throw new Error("config missing");
     const json = await res.json();
-    return merge(DEFAULT_CONFIG, json);
-  } catch {
+    console.log("Config loaded successfully:", json);
+    const merged = merge(DEFAULT_CONFIG, json);
+    console.log("Merged config:", merged);
+    return merged;
+  } catch (error) {
+    console.warn("Failed to load config.json, using default config:", error);
     return DEFAULT_CONFIG;
   }
 }
