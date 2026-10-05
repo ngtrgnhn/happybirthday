@@ -20,12 +20,9 @@ function GiftBox3D({
 }) {
   const p = PALETTES[index % PALETTES.length];
   return (
-    <button
-      type="button"
-      onClick={onPick}
-      disabled={state !== "idle"}
-      aria-label={`Chọn hộp quà số ${index + 1}`}
-      className="group outline-none"
+    <div
+      onClick={state === "idle" ? onPick : undefined}
+      className={`group outline-none ${state === "idle" ? "cursor-pointer" : ""}`}
     >
       <div className="gift-stage">
         <div
@@ -82,7 +79,7 @@ function GiftBox3D({
       >
         hộp số {index + 1}
       </span>
-    </button>
+    </div>
   );
 }
 
