@@ -17,27 +17,27 @@ function CeremonySteps({ phase, charReady }: { phase: string; charReady: boolean
     phase === "blown" ? 3 : -1;
   if (idx < 0) return null;
   return (
-    <div className="mb-3 flex items-center justify-center gap-2.5">
+    <div className="mb-3 flex items-center justify-center gap-3">
       {steps.map((s, i) => (
-        <span key={s} className="flex items-center gap-2.5">
+        <span key={s} className="flex items-center gap-3">
           <span
-            className={`flex items-center gap-1.5 rounded-full px-2.5 py-1 font-display font-bold text-[10px] uppercase tracking-wide transition-all duration-400 ${
+            className={`flex items-center gap-1.5 font-display font-bold text-[11px] uppercase tracking-wide transition-all duration-400 ${
               i === idx
-                ? "bg-white text-punch-deep soft-shadow-sm scale-105"
+                ? "text-white scale-105"
                 : i < idx
-                ? "bg-white/45 text-white"
-                : "bg-white/20 text-white/70"
+                ? "text-white/60"
+                : "text-white/40"
             }`}
           >
             <span
-              className={`h-1.5 w-1.5 rounded-full ${
-                i === idx ? "bg-punch anim-heart" : i < idx ? "bg-white" : "bg-white/50"
+              className={`h-2 w-2 rounded-full ${
+                i === idx ? "bg-white anim-heart" : i < idx ? "bg-white/60" : "bg-white/30"
               }`}
             />
             {s}
           </span>
           {i < steps.length - 1 && (
-            <span className={`h-px w-3 ${i < idx ? "bg-white/70" : "bg-white/25"}`} />
+            <span className={`h-px w-4 ${i < idx ? "bg-white/50" : "bg-white/20"}`} />
           )}
         </span>
       ))}
@@ -79,38 +79,38 @@ export function Hud({ config }: { config: PartyConfig }) {
       )}
 
       <div className="absolute inset-0 z-30 pointer-events-none">
-        {/* top-left: recipient pill */}
+        {/* top-left: recipient info */}
         <div
           className={`absolute top-4 left-4 md:top-6 md:left-6 transition-all duration-500 ${
             inCeremony ? "opacity-0 -translate-x-5 pointer-events-none" : "opacity-100"
           }`}
         >
-          <div className="soft-shadow-sm rounded-full bg-white/95 border border-blush px-4 py-2.5 md:px-5 md:py-3 flex items-center gap-2.5 -rotate-1">
-            <span className="text-punch anim-heart"><HeartIcon className="w-4.5 h-4.5" /></span>
-            <span className="font-display font-bold text-ink text-sm md:text-base leading-none pt-0.5">
+          <div className="flex items-center gap-2 -rotate-1">
+            <HeartIcon className="w-5 h-5 text-white anim-heart" />
+            <span className="font-display font-bold text-white text-sm md:text-base text-soft-shadow">
               Chúc mừng sinh nhật {config.recipient.name}
             </span>
           </div>
-          <div className="mt-2 ml-3 flex items-center gap-1.5 text-white/95">
+          <div className="mt-1 ml-7 flex items-center gap-1.5">
             <SparkIcon className="w-3.5 h-3.5 text-butter" />
-            <span className="font-display font-bold text-xs md:text-sm text-soft-shadow leading-none">
+            <span className="font-display font-bold text-xs md:text-sm text-white/90 text-soft-shadow">
               tròn {config.recipient.age} tuổi
             </span>
           </div>
         </div>
 
-        {/* top-right: event ticket */}
+        {/* top-right: event info */}
         <div
           className={`absolute top-4 right-4 md:top-6 md:right-6 transition-all duration-500 ${
             inCeremony ? "opacity-0 translate-x-5 pointer-events-none" : "opacity-100"
           }`}
         >
-          <div className="rounded-[18px] bg-white/95 border-2 border-dashed border-candy soft-shadow-sm px-4 py-2.5 rotate-1 text-right">
-            <p className="flex items-center justify-end gap-1.5 font-body font-semibold text-[11px] md:text-xs text-ink-soft">
-              <CalendarIcon className="w-3.5 h-3.5 text-punch-deep" /> {config.event.date}
+          <div className="rotate-1 text-right">
+            <p className="flex items-center justify-end gap-1.5 font-body font-semibold text-[11px] md:text-xs text-white/90">
+              <CalendarIcon className="w-3.5 h-3.5" /> {config.event.date}
             </p>
-            <p className="flex items-center justify-end gap-1.5 font-body font-semibold text-[11px] md:text-xs text-ink-soft mt-1">
-              <PinIcon className="w-3.5 h-3.5 text-punch-deep" /> {config.event.place}
+            <p className="flex items-center justify-end gap-1.5 font-body font-semibold text-[11px] md:text-xs text-white/90 mt-1">
+              <PinIcon className="w-3.5 h-3.5" /> {config.event.place}
             </p>
           </div>
         </div>
@@ -120,7 +120,7 @@ export function Hud({ config }: { config: PartyConfig }) {
           <div className="absolute top-16 md:top-20 inset-x-0 flex justify-center px-4">
             <div
               key={phase}
-              className="anim-rise rounded-full bg-[#6b2447]/85 backdrop-blur-sm text-blush font-body font-medium text-xs md:text-sm px-5 py-2.5 text-center soft-shadow-sm"
+              className="anim-rise text-white font-body font-medium text-xs md:text-sm text-center text-soft-shadow"
             >
               {hint}
             </div>
@@ -149,35 +149,35 @@ export function Hud({ config }: { config: PartyConfig }) {
         >
           {inCeremony && <CeremonySteps phase={phase} charReady={charReady} />}
           
-          {/* Hint text đơn giản */}
+          {/* Hint text đơn giản - không có background */}
           {phase === "approach" && !charReady && (
-            <div className="mt-3 flex items-center gap-2 bg-white/90 rounded-full px-4 py-2 soft-shadow-sm anim-rise">
-              <HeartIcon className="w-4 h-4 text-punch anim-heart" />
-              <span className="font-body text-sm text-ink-soft font-medium">cô bé đang tới...</span>
+            <div className="mt-3 flex items-center gap-2 anim-rise">
+              <HeartIcon className="w-5 h-5 text-white anim-heart" />
+              <span className="font-body text-sm text-white font-medium text-soft-shadow">cô bé đang tới...</span>
             </div>
           )}
           {phase === "approach" && charReady && (
-            <div className="mt-3 flex items-center gap-2 bg-punch-deep/90 rounded-full px-4 py-2 soft-shadow-sm anim-rise">
-              <WindIcon className="w-4 h-4 text-white" />
-              <span className="font-body text-sm text-white font-medium">nhấn vào bánh kem để thổi nến</span>
+            <div className="mt-3 flex items-center gap-2 anim-rise">
+              <WindIcon className="w-5 h-5 text-white" />
+              <span className="font-body text-sm text-white font-medium text-soft-shadow">nhấn vào bánh kem để thổi nến</span>
             </div>
           )}
           {phase === "blowing" && (
-            <div className="mt-3 flex items-center gap-2 bg-white/90 rounded-full px-4 py-2 soft-shadow-sm anim-rise">
-              <WindIcon className="w-4 h-4 text-punch-deep anim-bob" />
-              <span className="font-body text-sm text-ink-soft font-medium">hít sâu... thổi!</span>
+            <div className="mt-3 flex items-center gap-2 anim-rise">
+              <WindIcon className="w-5 h-5 text-white anim-bob" />
+              <span className="font-body text-sm text-white font-medium text-soft-shadow">hít sâu... thổi!</span>
             </div>
           )}
           {phase === "blown" && (
-            <div className="mt-3 flex items-center gap-2 bg-butter/90 rounded-full px-4 py-2 soft-shadow-sm anim-rise">
-              <MatchIcon className="w-4 h-4 text-ink" />
-              <span className="font-body text-sm text-ink font-medium">nhấn vào bánh kem để thắp lại nến</span>
+            <div className="mt-3 flex items-center gap-2 anim-rise">
+              <MatchIcon className="w-5 h-5 text-white" />
+              <span className="font-body text-sm text-white font-medium text-soft-shadow">nhấn vào bánh kem để thắp lại nến</span>
             </div>
           )}
           {phase === "relight" && (
-            <div className="mt-3 flex items-center gap-2 bg-white/90 rounded-full px-4 py-2 soft-shadow-sm anim-rise">
-              <FlameIcon className="w-4 h-4 text-butter anim-heart" />
-              <span className="font-body text-sm text-ink-soft font-medium">đang thắp nến...</span>
+            <div className="mt-3 flex items-center gap-2 anim-rise">
+              <FlameIcon className="w-5 h-5 text-white anim-heart" />
+              <span className="font-body text-sm text-white font-medium text-soft-shadow">đang thắp nến...</span>
             </div>
           )}
         </div>

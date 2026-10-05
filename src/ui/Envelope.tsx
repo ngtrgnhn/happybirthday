@@ -311,13 +311,11 @@ export function Envelope({ config }: { config: PartyConfig }) {
 
         {/* bottom caption - click vào phong bì để mở */}
         {stage === "closed" && (
-          <div className="anim-rise flex flex-col items-center gap-3" style={{ animationDelay: "200ms" }}>
-            <div className="flex items-center gap-2 bg-white/90 rounded-full px-5 py-2.5 soft-shadow-sm anim-bob">
-              <HeartIcon className="w-5 h-5 text-punch anim-heart" />
-              <span className="font-body text-sm text-punch-deep font-bold">
-                nhấn vào phong bì để mở
-              </span>
-            </div>
+          <div className="anim-rise flex flex-col items-center gap-2" style={{ animationDelay: "200ms" }}>
+            <HeartIcon className="w-8 h-8 text-white anim-heart" />
+            <p className="font-body text-white/95 text-sm font-medium text-center text-soft-shadow">
+              nhấn vào phong bì để mở
+            </p>
           </div>
         )}
         {(stage === "flap" || stage === "fly" || stage === "dissolve") && (
