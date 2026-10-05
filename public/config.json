@@ -1,8 +1,8 @@
 {
   "recipient": {
-    "name": "Hà My",
-    "nickname": "cậu",
-    "age": 18
+    "name": "Đỗ Thị Anh Thư",
+    "nickname": "Em",
+    "age": 17
   },
   "sender": {
     "name": "Tớ",
@@ -11,12 +11,12 @@
   "event": {
     "kicker": "Lá thư chúc mừng sinh nhật",
     "title": "Gửi cậu của hôm nay",
-    "date": "20 . 06",
-    "place": "Căn phòng nhỏ màu hồng",
-    "time": "19:30 tối nay"
+    "date": "18 . 10",
+    "place": "",
+    "time": "18:00 tối nay"
   },
   "letter": {
-    "heading": "Gửi Hà My,",
+    "heading": "Gửi Đỗ Thị Anh Thư,",
     "body": "Hôm nay là ngày của cậu. Tớ đã định viết thật dài, nhưng rồi nhận ra có những điều chỉ cần nói gọn trong một câu. Cảm ơn cậu vì một năm qua đã luôn ở đó — dịu dàng, kiên nhẫn và ấm áp theo cách không ai thay thế được.",
     "wish": "Điều ước duy nhất tớ gửi vào ngọn nến: mong tuổi mới của cậu luôn rạng rỡ như chính cậu của hôm nay — phần còn lại của thế giới, cứ để tụi tớ lo.",
     "ps": "Tái bút: cuộn xuống chút nữa nhé, tớ giấu vài thứ nhỏ xinh ở dưới đó."
