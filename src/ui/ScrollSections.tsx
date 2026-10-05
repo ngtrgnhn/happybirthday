@@ -179,38 +179,16 @@ function Memories({ config }: { config: PartyConfig }) {
         ))}
       </div>
 
-      <div className="mt-4 flex items-center justify-center gap-4">
-        <button
-          type="button"
-          onClick={() => scrollTo(Math.max(0, active - 1))}
-          disabled={active === 0}
-          aria-label="Ảnh trước"
-          className="soft-btn hidden h-11 w-11 items-center justify-center rounded-full bg-white/90 text-punch-deep soft-shadow-sm disabled:opacity-40 sm:flex"
-        >
-          <ChevronDownIcon className="h-5 w-5 rotate-90" />
-        </button>
-        <div className="flex items-center gap-2">
-          {items.map((_, i) => (
-            <button
-              key={i}
-              type="button"
-              aria-label={`Xem ảnh ${i + 1}`}
-              onClick={() => scrollTo(i)}
-              className={`h-2.5 rounded-full transition-all duration-300 ${
-                i === active ? "w-7 bg-white" : "w-2.5 bg-white/50 hover:bg-white/75"
-              }`}
-            />
-          ))}
-        </div>
-        <button
-          type="button"
-          onClick={() => scrollTo(Math.min(items.length - 1, active + 1))}
-          disabled={active === items.length - 1}
-          aria-label="Ảnh sau"
-          className="soft-btn hidden h-11 w-11 items-center justify-center rounded-full bg-white/90 text-punch-deep soft-shadow-sm disabled:opacity-40 sm:flex"
-        >
-          <ChevronDownIcon className="h-5 w-5 -rotate-90" />
-        </button>
+      {/* dots indicator - visual only, swipe to navigate */}
+      <div className="mt-4 flex items-center justify-center gap-2">
+        {items.map((_, i) => (
+          <span
+            key={i}
+            className={`h-2.5 rounded-full transition-all duration-300 ${
+              i === active ? "w-7 bg-white" : "w-2.5 bg-white/50"
+            }`}
+          />
+        ))}
       </div>
       <p className="mt-3 text-center font-body text-xs text-white/75 md:hidden">
         vuốt sang ngang để xem từng tấm
@@ -232,16 +210,12 @@ export function ScrollSections({ config }: { config: PartyConfig }) {
     <div className="relative">
       {/* ---------- hero: transparent window onto the 3D scene ---------- */}
       <section id="sec-hero" className="relative min-h-screen snap-start" style={{ minHeight: "100dvh" }}>
-        <button
-          type="button"
-          onClick={() => goSection("sec-letter")}
-          className="absolute bottom-7 left-1/2 z-10 flex -translate-x-1/2 flex-col items-center gap-1 text-punch-deep"
-        >
+        <div className="absolute bottom-7 left-1/2 z-10 flex -translate-x-1/2 flex-col items-center gap-1 text-punch-deep pointer-events-none">
           <span className="rounded-full bg-white/85 soft-shadow-sm px-4 py-1.5 font-display font-bold text-[13px]">
             cuộn xuống đọc thư
           </span>
           <ChevronDownIcon className="anim-bob h-5 w-5" />
-        </button>
+        </div>
       </section>
 
       {/* ---------- the letter : pale paper-pink world ---------- */}
@@ -364,15 +338,9 @@ export function ScrollSections({ config }: { config: PartyConfig }) {
           <p className="mt-5 flex items-center justify-center gap-2 font-display font-bold text-white text-base md:text-lg text-soft-shadow">
             làm với thật nhiều <HeartIcon className="anim-heart w-5 h-5 text-blush" /> bởi {config.sender.name}
           </p>
-          <button
-            type="button"
-            onClick={() => {
-              document.getElementById("page-scroller")?.scrollTo({ top: 0, behavior: "smooth" });
-            }}
-            className="soft-btn mt-7 inline-flex items-center gap-2 rounded-full bg-white/90 px-6 py-3 font-display font-bold text-punch-deep text-sm soft-shadow-sm"
-          >
-            <ChevronDownIcon className="h-4 w-4 rotate-180" /> thổi nến lại từ đầu
-          </button>
+          <p className="mt-4 font-body text-xs text-white/75">
+            cuộn lên đầu trang để thổi nến lại bất cứ lúc nào
+          </p>
         </div>
       </footer>
     </div>

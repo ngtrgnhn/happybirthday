@@ -2,78 +2,11 @@ import { useEffect, useState } from "react";
 import type { PartyConfig } from "../config";
 import { useParty, CEREMONY } from "../store";
 import {
-  HeartIcon, CalendarIcon, PinIcon, ClockIcon, FlameIcon,
+  HeartIcon, CalendarIcon, PinIcon, FlameIcon,
   MatchIcon, WindIcon, ChevronDownIcon, SparkIcon,
 } from "./icons";
 
-/* ---------- vertical dot navigation across the full-screen sections ---------- */
-const SECTIONS = [
-  { id: "sec-hero", label: "bánh kem" },
-  { id: "sec-letter", label: "lá thư" },
-  { id: "sec-memories", label: "ảnh kỷ niệm" },
-  { id: "sec-gifts", label: "hộp quà" },
-];
 
-function SectionDots() {
-  const [active, setActive] = useState(0);
-  useEffect(() => {
-    const sc = document.getElementById("page-scroller");
-    if (!sc) return;
-    let raf = 0;
-    const onScroll = () => {
-      cancelAnimationFrame(raf);
-      raf = requestAnimationFrame(() => {
-        const mid = sc.scrollTop + sc.clientHeight * 0.5;
-        let idx = 0;
-        SECTIONS.forEach((s, i) => {
-          const el = document.getElementById(s.id);
-          if (el && el.offsetTop <= mid) idx = i;
-        });
-        setActive((a) => (a === idx ? a : idx));
-      });
-    };
-    sc.addEventListener("scroll", onScroll, { passive: true });
-    onScroll();
-    return () => {
-      sc.removeEventListener("scroll", onScroll);
-      cancelAnimationFrame(raf);
-    };
-  }, []);
-  const go = (id: string) => {
-    const el = document.getElementById(id);
-    const sc = document.getElementById("page-scroller");
-    if (el && sc) sc.scrollTo({ top: el.offsetTop, behavior: "smooth" });
-  };
-  return (
-    <nav
-      aria-label="Điều hướng các mục"
-      className="absolute right-3 top-1/2 z-30 hidden -translate-y-1/2 flex-col items-end gap-3 sm:flex md:right-5"
-    >
-      {SECTIONS.map((s, i) => (
-        <button
-          key={s.id}
-          type="button"
-          onClick={() => go(s.id)}
-          aria-label={`Tới mục ${s.label}`}
-          className="group flex items-center gap-2"
-        >
-          <span
-            className={`rounded-full bg-white soft-shadow-sm transition-all duration-300 ${
-              i === active ? "w-2.5 h-7" : "w-2.5 h-2.5 opacity-60 group-hover:opacity-90"
-            }`}
-          />
-          <span
-            className={`pointer-events-none max-w-0 overflow-hidden whitespace-nowrap font-display font-bold text-[11px] text-white text-soft-shadow transition-all duration-300 ${
-              i === active ? "max-w-[110px] opacity-100" : "opacity-0 group-hover:max-w-[110px] group-hover:opacity-80"
-            }`}
-          >
-            {s.label}
-          </span>
-        </button>
-      ))}
-    </nav>
-  );
-}
 
 /* ---------- ceremony progress steps ---------- */
 function CeremonySteps({ phase, charReady }: { phase: string; charReady: boolean }) {
@@ -206,8 +139,7 @@ export function Hud({ config }: { config: PartyConfig }) {
           </div>
         )}
 
-        {/* section dots while freely browsing the page */}
-        {!inCeremony && phase === "party" && <SectionDots />}
+
 
         {/* action dock - chỉ hiển thị ceremony steps và hint */}
         <div

@@ -1,8 +1,7 @@
 import { useMemo, useRef, useState } from "react";
 import type { PartyConfig } from "../config";
 import { useParty } from "../store";
-import { SoftButton } from "./Soft";
-import { HeartIcon, LetterIcon, SparkIcon, ArrowRightIcon } from "./icons";
+import { HeartIcon, SparkIcon, ArrowRightIcon } from "./icons";
 import { LetterPaper } from "./LetterPaper";
 
 type Stage = "closed" | "flap" | "fly" | "dissolve" | "reading";
@@ -168,8 +167,11 @@ export function Envelope({ config }: { config: PartyConfig }) {
               }}
             >
               <div
-                className="airmail relative rounded-[30px] p-[9px] soft-shadow"
+                className={`airmail relative rounded-[30px] p-[9px] soft-shadow ${
+                  stage === "closed" ? "cursor-pointer hover:scale-[1.02] transition-transform duration-300" : ""
+                }`}
                 style={envGone ? { animation: "envelopeMelt .55s ease-in forwards" } : undefined}
+                onClick={stage === "closed" ? doOpen : undefined}
               >
               <div
                 className="relative aspect-[3/2.05] overflow-hidden rounded-[22px] bg-[linear-gradient(180deg,#f97fb4,#ee5f9f)]"
@@ -252,13 +254,10 @@ export function Envelope({ config }: { config: PartyConfig }) {
                   </div>
                 </div>
 
-                {/* seal button */}
+                {/* seal indicator - visual only, click anywhere on envelope to open */}
                 {stage === "closed" && (
-                  <button
-                    type="button"
-                    onClick={doOpen}
-                    aria-label="Mở thư"
-                    className="absolute left-1/2 top-[48%] anim-ring rounded-full"
+                  <div
+                    className="absolute left-1/2 top-[48%] anim-ring rounded-full pointer-events-none"
                     style={{
                       zIndex: 50,
                       transform: "translate(-50%, -50%)",
@@ -270,7 +269,7 @@ export function Envelope({ config }: { config: PartyConfig }) {
                         <HeartIcon className="w-7 h-7" />
                       </span>
                     </span>
-                  </button>
+                  </div>
                 )}
               </div>
               </div>
@@ -320,15 +319,15 @@ export function Envelope({ config }: { config: PartyConfig }) {
           </div>
         )}
 
-        {/* bottom caption */}
+        {/* bottom caption - click vào phong bì để mở */}
         {stage === "closed" && (
           <div className="anim-rise flex flex-col items-center gap-3" style={{ animationDelay: "200ms" }}>
-            <SoftButton onClick={doOpen} variant="white" ariaLabel="Mở thư">
-              <LetterIcon className="w-4.5 h-4.5 text-punch-deep" /> Mở thư
-            </SoftButton>
-            <p className="font-body text-white/90 text-sm font-medium text-center">
-              có một lá thư đang chờ {config.recipient.nickname} mở ra...
-            </p>
+            <div className="flex items-center gap-2 bg-white/90 rounded-full px-5 py-2.5 soft-shadow-sm anim-bob">
+              <HeartIcon className="w-5 h-5 text-punch anim-heart" />
+              <span className="font-body text-sm text-punch-deep font-bold">
+                nhấn vào phong bì để mở
+              </span>
+            </div>
           </div>
         )}
         {(stage === "flap" || stage === "fly" || stage === "dissolve") && (
