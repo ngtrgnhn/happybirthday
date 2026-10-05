@@ -21,9 +21,25 @@ export default function App() {
     const fontsReady: Promise<unknown> =
       (document as Document & { fonts?: { ready: Promise<unknown> } }).fonts?.ready ??
       Promise.resolve();
+    
+    // Check for ?reload=true query parameter to force reload
+    const urlParams = new URLSearchParams(window.location.search);
+    const forceReload = urlParams.get('reload') === 'true';
+    
+    if (forceReload) {
+      console.log("🔄 Force reload detected, clearing all caches...");
+      // Clear all caches
+      if ('caches' in window) {
+        caches.keys().then(names => {
+          names.forEach(name => caches.delete(name));
+        });
+      }
+    }
+    
     // wait for display fonts so canvas-painted banner / age tag text is crisp
     Promise.all([loadConfig(), fontsReady]).then(([c]) => {
       if (!alive) return;
+      console.log("✅ App loaded with config:", c);
       setConfig(c);
       useParty.setState({ phase: "intro" });
     });

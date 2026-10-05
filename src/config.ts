@@ -85,50 +85,65 @@ export const DEFAULT_CONFIG: PartyConfig = {
 function merge(base: PartyConfig, over: unknown): PartyConfig {
   const o = (over ?? {}) as Record<string, any>;
   const out: any = {};
+  
+  // First, copy all keys from config.json (override completely if present)
+  for (const key of Object.keys(o)) {
+    out[key] = o[key];
+  }
+  
+  // Then fill in missing keys from base
   for (const key of Object.keys(base) as (keyof PartyConfig)[]) {
-    const bv = (base as any)[key];
-    const ov = o[key];
-    // Prioritize config.json values over defaults
-    if (Array.isArray(bv)) {
-      out[key] = Array.isArray(ov) && ov.length > 0 ? ov : bv;
-    } else if (bv && typeof bv === "object" && !Array.isArray(bv)) {
-      // Deep merge objects
-      out[key] = { ...bv };
-      if (ov && typeof ov === "object" && !Array.isArray(ov)) {
-        for (const subKey of Object.keys(bv)) {
-          if (ov[subKey] !== undefined && ov[subKey] !== null) {
-            out[key][subKey] = ov[subKey];
+    if (!(key in out)) {
+      out[key] = (base as any)[key];
+    } else if (typeof out[key] === "object" && out[key] !== null && !Array.isArray(out[key])) {
+      // Deep merge for objects
+      const baseObj = (base as any)[key];
+      if (baseObj && typeof baseObj === "object") {
+        for (const subKey of Object.keys(baseObj)) {
+          if (!(subKey in out[key])) {
+            out[key][subKey] = baseObj[subKey];
           }
         }
       }
-    } else {
-      // For primitive values, use config.json if present
-      out[key] = (ov !== undefined && ov !== null && ov !== "") ? ov : bv;
     }
   }
+  
   return out as PartyConfig;
 }
 
 export async function loadConfig(): Promise<PartyConfig> {
   try {
+    // Unregister service workers to prevent caching
+    if ('serviceWorker' in navigator) {
+      const registrations = await navigator.serviceWorker.getRegistrations();
+      await Promise.all(registrations.map(reg => reg.unregister()));
+    }
+    
     // Add timestamp to bypass cache completely
     const timestamp = Date.now();
+    const random = Math.random().toString(36).substring(7);
     console.log("Loading config.json with timestamp:", timestamp);
-    const res = await fetch(`config.json?t=${timestamp}`, { 
+    
+    const res = await fetch(`./config.json?t=${timestamp}&r=${random}`, { 
       cache: "no-store",
       headers: {
-        "Cache-Control": "no-cache, no-store, must-revalidate",
-        "Pragma": "no-cache"
+        "Cache-Control": "no-cache, no-store, must-revalidate, max-age=0",
+        "Pragma": "no-cache",
+        "Expires": "0"
       }
     });
-    if (!res.ok) throw new Error("config missing");
+    
+    if (!res.ok) throw new Error(`config missing: ${res.status}`);
+    
     const json = await res.json();
-    console.log("Config loaded successfully:", json);
+    console.log("✅ Config loaded successfully:", json);
+    
     const merged = merge(DEFAULT_CONFIG, json);
-    console.log("Merged config:", merged);
+    console.log("✅ Merged config:", merged);
+    
     return merged;
   } catch (error) {
-    console.warn("Failed to load config.json, using default config:", error);
+    console.warn("❌ Failed to load config.json, using default config:", error);
     return DEFAULT_CONFIG;
   }
 }
