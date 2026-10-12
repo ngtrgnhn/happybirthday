@@ -1,5 +1,5 @@
-import { useState } from "react";
-import type { PartyConfig } from "../config";
+import { useMemo, useState } from "react";
+import { makeT, type PartyConfig } from "../config";
 import { useParty } from "../store";
 import { GiftIcon, HeartIcon } from "./icons";
 
@@ -12,10 +12,12 @@ const PALETTES = [
 function GiftBox3D({
   index,
   state,
+  label,
   onPick,
 }: {
   index: number;
   state: "idle" | "open" | "away";
+  label: string;
   onPick: () => void;
 }) {
   const p = PALETTES[index % PALETTES.length];
@@ -77,7 +79,7 @@ function GiftBox3D({
           state === "idle" ? "text-punch-deep group-hover:text-punch" : "text-ink-soft/60"
         }`}
       >
-        hộp số {index + 1}
+        {label}
       </span>
     </div>
   );
@@ -88,6 +90,7 @@ export function GiftPicker({ config }: { config: PartyConfig }) {
   const [revealed, setRevealed] = useState(false);
   const [gift, setGift] = useState<{ title: string; message: string } | null>(null);
   const fireBurst = useParty((s) => s.fireBurst);
+  const T = useMemo(() => makeT(config), [config]);
 
   const pick = (i: number) => {
     if (chosen !== null) return;
@@ -109,6 +112,7 @@ export function GiftPicker({ config }: { config: PartyConfig }) {
             key={i}
             index={i}
             state={chosen === null ? "idle" : chosen === i ? "open" : "away"}
+            label={T("giftBox", { n: i + 1 })}
             onPick={() => pick(i)}
           />
         ))}
@@ -116,7 +120,7 @@ export function GiftPicker({ config }: { config: PartyConfig }) {
 
       {chosen !== null && !revealed && (
         <p className="mt-7 text-center font-body text-ink-soft text-sm animate-pulse">
-          đang mở hộp...
+          {T("giftOpening")}
         </p>
       )}
 
@@ -124,14 +128,14 @@ export function GiftPicker({ config }: { config: PartyConfig }) {
         <div className="relative mx-auto mt-7 max-w-[440px] rounded-[24px] panel-soft soft-shadow-sm px-6 py-6 text-center anim-pop">
           <span className="absolute -top-3 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-punch px-4 py-1 font-display font-bold text-paper text-xs uppercase tracking-wide soft-shadow-sm">
             <span className="flex items-center gap-1.5">
-              <GiftIcon className="w-3.5 h-3.5" /> định mệnh đã chọn
+              <GiftIcon className="w-3.5 h-3.5" /> {T("giftChosen")}
             </span>
           </span>
           <h4 className="font-display font-extrabold text-punch-deep text-2xl mt-2">{gift.title}</h4>
           <p className="mt-2 font-body text-[15px] text-ink-soft leading-relaxed">{gift.message}</p>
           <p className="mt-3 flex items-center justify-center gap-2 font-body text-xs text-ink-soft/80 italic">
             <HeartIcon className="w-3.5 h-3.5 text-punch anim-heart" />
-            quà ngẫu nhiên, chỉ mở một lần — quà thật sẽ đến tay cậu sớm thôi
+            {T("giftNote")}
           </p>
         </div>
       )}

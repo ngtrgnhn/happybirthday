@@ -1,9 +1,10 @@
 import { ReactNode, useEffect, useMemo, useRef, useState } from "react";
-import type { PartyConfig } from "../config";
+import { makeT, type PartyConfig } from "../config";
 import { LetterPaper } from "./LetterPaper";
 import { GiftPicker } from "./Gifts";
+import { renderRich } from "./rich";
 import {
-  HeartIcon, CakeIcon, ChevronDownIcon, SparkIcon, EnvelopeIcon, GiftIcon, CameraIcon,
+  HeartIcon, CakeIcon, SparkIcon, EnvelopeIcon, GiftIcon, CameraIcon,
 } from "./icons";
 
 /* ---------------- scroll reveal ---------------- */
@@ -99,7 +100,8 @@ function SectionHead({
 function Memories({ config }: { config: PartyConfig }) {
   const track = useRef<HTMLDivElement>(null);
   const [active, setActive] = useState(0);
-  const items = useMemo(() => config.memories.slice(0, 5), [config]);
+  const items = useMemo(() => config.memories.slice(0, 12), [config]);
+  const T = useMemo(() => makeT(config), [config]);
 
   const scrollTo = (i: number) => {
     const el = track.current;
@@ -191,7 +193,7 @@ function Memories({ config }: { config: PartyConfig }) {
         ))}
       </div>
       <p className="mt-3 text-center font-body text-xs text-white/75 md:hidden">
-        vuốt sang ngang để xem từng tấm
+        {T("memoriesSwipe")}
       </p>
     </div>
   );
@@ -206,17 +208,18 @@ const goSection = (id: string) => {
 };
 
 export function ScrollSections({ config }: { config: PartyConfig }) {
+  const T = useMemo(() => makeT(config), [config]);
+  const hasMemories = config.memories.length > 0;
+  const hasGifts = config.gifts.length > 0;
+  // a scallop is painted with the colour of the section that follows it
+  const afterLetter = hasMemories ? "#e84a8f" : hasGifts ? "#fff3d8" : "#dd3f86";
+  const afterMemories = hasGifts ? "#fff3d8" : "#dd3f86";
+
   return (
     <div className="relative">
-      {/* ---------- hero: transparent window onto the 3D scene ---------- */}
-      <section id="sec-hero" className="relative min-h-screen snap-start" style={{ minHeight: "100dvh" }}>
-        <div className="absolute bottom-7 left-1/2 z-10 flex -translate-x-1/2 flex-col items-center gap-1 text-punch-deep pointer-events-none">
-          <span className="rounded-full bg-white/85 soft-shadow-sm px-4 py-1.5 font-display font-bold text-[13px]">
-            cuộn xuống đọc thư
-          </span>
-          <ChevronDownIcon className="anim-bob h-5 w-5" />
-        </div>
-      </section>
+      {/* ---------- hero: transparent window onto the 3D scene.
+          (the "scroll down" cue lives in the HUD; the cake itself is the control) ---------- */}
+      <section id="sec-hero" className="relative min-h-screen snap-start" style={{ minHeight: "100dvh" }} />
 
       {/* ---------- the letter : pale paper-pink world ---------- */}
       <section
@@ -239,9 +242,9 @@ export function ScrollSections({ config }: { config: PartyConfig }) {
         <div className="relative mx-auto w-full max-w-[660px]">
           <SectionHead
             icon={<EnvelopeIcon className="w-3.5 h-3.5" />}
-            badge="phong thư đã mở"
-            title="Lá thư dành cho cậu"
-            sub="nắn nót từng chữ, chỉ chờ cậu đọc — một lời chúc duy nhất nằm ngay trong đó"
+            badge={T("letterBadge")}
+            title={T("letterTitle")}
+            sub={T("letterSub")}
           />
           <Reveal delay={80}>
             <LetterPaper config={config} className="-rotate-[0.6deg]" />
@@ -250,17 +253,18 @@ export function ScrollSections({ config }: { config: PartyConfig }) {
             <div className="mx-auto mt-8 flex max-w-[420px] items-center gap-3 rounded-[18px] border border-white bg-white/70 px-4 py-3 soft-shadow-sm">
               <CakeIcon className="w-7 h-7 shrink-0 text-punch-deep" />
               <p className="font-body text-[13px] leading-snug text-ink-soft">
-                đọc xong thì cuộn lên lại, tới gần bánh kem và <b className="text-punch-deep">thổi nến</b> nhé —
-                điều ước chỉ linh nghiệm khi nến tắt.
+                {renderRich(T("letterNote"), "text-punch-deep")}
               </p>
             </div>
           </Reveal>
         </div>
       </section>
 
-      <Scallop fill="#e84a8f" />
+      <Scallop fill={afterLetter} />
 
       {/* ---------- memories : deep-rose bokeh world ---------- */}
+      {hasMemories && (
+      <>
       <section
         id="sec-memories"
         className="cv relative flex min-h-screen snap-start flex-col justify-center overflow-hidden bg-[linear-gradient(178deg,#f97fb4_0%,#e84a8f_72%,#dd3f86_100%)] px-4 py-14"
@@ -279,9 +283,9 @@ export function ScrollSections({ config }: { config: PartyConfig }) {
           <SectionHead
             tone="dark"
             icon={<CameraIcon className="w-3.5 h-3.5" />}
-            badge="năm qua của tụi mình"
-            title="Ảnh kỷ niệm"
-            sub="mỗi tấm là một ngày vui — vuốt ngang để lật xem từng chút một"
+            badge={T("memoriesBadge")}
+            title={T("memoriesTitle")}
+            sub={T("memoriesSub")}
           />
           <Reveal>
             <Memories config={config} />
@@ -289,9 +293,13 @@ export function ScrollSections({ config }: { config: PartyConfig }) {
         </div>
       </section>
 
-      <Scallop fill="#fff3d8" />
+      <Scallop fill={afterMemories} />
+      </>
+      )}
 
       {/* ---------- gifts : butter candy-shop world ---------- */}
+      {hasGifts && (
+      <>
       <section
         id="sec-gifts"
         className="cv relative flex min-h-screen snap-start flex-col justify-center overflow-hidden bg-[linear-gradient(180deg,#fff3d8_0%,#ffe9b5_100%)] px-4 py-14"
@@ -312,9 +320,9 @@ export function ScrollSections({ config }: { config: PartyConfig }) {
         <div className="relative mx-auto w-full max-w-[760px]">
           <SectionHead
             icon={<GiftIcon className="w-3.5 h-3.5" />}
-            badge="bí mật nhỏ"
-            title="Ba hộp quà"
-            sub="chọn một hộp bằng linh cảm — món quà bên trong là ngẫu nhiên, và chỉ mở được một lần duy nhất"
+            badge={T("giftsBadge")}
+            title={T("giftsTitle")}
+            sub={T("giftsSub")}
           />
           <Reveal>
             <GiftPicker config={config} />
@@ -323,6 +331,8 @@ export function ScrollSections({ config }: { config: PartyConfig }) {
       </section>
 
       <Scallop fill="#dd3f86" />
+      </>
+      )}
 
       {/* ---------- footer : deep-punch closing card ---------- */}
       <footer className="cv relative flex min-h-[60vh] snap-start flex-col items-center justify-center overflow-hidden bg-[linear-gradient(180deg,#dd3f86_0%,#c22f70_100%)] px-4 py-16 text-center">
@@ -336,10 +346,10 @@ export function ScrollSections({ config }: { config: PartyConfig }) {
         <div className="relative">
           <p className="paper-script text-3xl md:text-4xl text-blush/95">{config.banner.sub}</p>
           <p className="mt-5 flex items-center justify-center gap-2 font-display font-bold text-white text-base md:text-lg text-soft-shadow">
-            làm với thật nhiều <HeartIcon className="anim-heart w-5 h-5 text-blush" /> bởi {config.sender.name}
+            {T("footerMade")} <HeartIcon className="anim-heart w-5 h-5 text-blush" /> {T("footerBy")}
           </p>
           <p className="mt-4 font-body text-xs text-white/75">
-            cuộn lên đầu trang để thổi nến lại bất cứ lúc nào
+            {T("footerNote")}
           </p>
         </div>
       </footer>

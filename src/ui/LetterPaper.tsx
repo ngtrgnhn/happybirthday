@@ -1,19 +1,27 @@
-import type { PartyConfig } from "../config";
+import { joinNonEmpty, type PartyConfig } from "../config";
 import { HeartIcon } from "./icons";
 
 /**
  * A paper letter that looks like a paper letter:
  * ruled sheet + red margin line, washi tape, postage stamp with postmark,
  * handwriting fonts, marker-highlighted wish, wax seal and little doodles.
+ *
+ * When `onSeal` is given, the heart-shaped wax seal in the bottom-right corner
+ * becomes the (only) control that opens the party.
  */
 export function LetterPaper({
   config,
   className = "",
+  onSeal,
+  sealLabel = "Vào tiệc",
 }: {
   config: PartyConfig;
   className?: string;
+  onSeal?: (e: React.MouseEvent<HTMLButtonElement>) => void;
+  sealLabel?: string;
 }) {
   const { letter, recipient, sender, event } = config;
+  const where = joinNonEmpty([event.place, event.date]);
   return (
     <div className={`paper rounded-[6px] px-6 pb-14 pt-12 sm:px-10 md:px-12 ${className}`}>
       {/* washi tape */}
@@ -80,13 +88,31 @@ export function LetterPaper({
         </div>
       </div>
 
-      {/* date + wax seal */}
-      <div className="absolute bottom-5 left-6 sm:left-10 paper-hand !text-[15px] text-ink-soft">
-        {event.place}, {event.date}
-      </div>
-      <div className="seal absolute bottom-4 right-6 sm:right-10 w-[54px] h-[54px] rounded-full flex items-center justify-center -rotate-8">
-        <HeartIcon className="w-6 h-6 text-paper/90 translate-y-[1px]" />
-      </div>
+      {/* place + date, then the wax seal */}
+      {where && (
+        <div className="absolute bottom-5 left-6 sm:left-10 paper-hand !text-[15px] text-ink-soft">
+          {where}
+        </div>
+      )}
+      {onSeal ? (
+        /* sticky anchor: on a short screen the seal rides along at the bottom-right of the
+           visible part of the letter, then settles into its corner at the very end */
+        <div className="sticky bottom-[54px] z-10 h-0">
+          <button
+            type="button"
+            onClick={onSeal}
+            aria-label={sealLabel}
+            title={sealLabel}
+            className="seal seal-live absolute right-0 bottom-[-40px] w-[54px] h-[54px] rounded-full flex items-center justify-center -rotate-8 cursor-pointer outline-none focus-visible:ring-4 focus-visible:ring-punch/60"
+          >
+            <HeartIcon className="w-6 h-6 text-paper/90 translate-y-[1px] anim-heart" />
+          </button>
+        </div>
+      ) : (
+        <div className="seal absolute bottom-4 right-6 sm:right-10 w-[54px] h-[54px] rounded-full flex items-center justify-center -rotate-8">
+          <HeartIcon className="w-6 h-6 text-paper/90 translate-y-[1px]" />
+        </div>
+      )}
     </div>
   );
 }

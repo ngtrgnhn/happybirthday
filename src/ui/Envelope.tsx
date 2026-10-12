@@ -1,7 +1,7 @@
-import { useMemo, useRef, useState } from "react";
-import type { PartyConfig } from "../config";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { makeT, type PartyConfig } from "../config";
 import { useParty } from "../store";
-import { HeartIcon, SparkIcon, ArrowRightIcon } from "./icons";
+import { HeartIcon, SparkIcon } from "./icons";
 import { LetterPaper } from "./LetterPaper";
 
 type Stage = "closed" | "flap" | "fly" | "dissolve" | "reading";
@@ -92,18 +92,76 @@ function Shreds() {
   );
 }
 
+/* little hearts that pop out of the wax seal the moment it is pressed */
+function SealBurst() {
+  const hearts = useMemo(
+    () =>
+      Array.from({ length: 16 }, (_, i) => {
+        const a = (i / 16) * Math.PI * 2 + Math.random() * 0.4;
+        const d = 70 + Math.random() * 130;
+        return {
+          tx: `${Math.cos(a) * d}px`,
+          ty: `${Math.sin(a) * d - 30}px`,
+          rot: `${Math.random() * 120 - 60}deg`,
+          size: 12 + Math.random() * 16,
+          delay: Math.random() * 0.08,
+          color: ["#ffffff", "#ffd3e5", "#ff9ec6", "#ffd98a"][i % 4],
+        };
+      }),
+    []
+  );
+  return (
+    <>
+      {hearts.map((h, i) => (
+        <span
+          key={i}
+          className="absolute left-0 top-0"
+          style={{
+            width: h.size,
+            height: h.size,
+            color: h.color,
+            animation: `burstHeart .8s cubic-bezier(.2,.7,.3,1) ${h.delay}s forwards`,
+            ["--tx" as string]: h.tx,
+            ["--ty" as string]: h.ty,
+            ["--rot" as string]: h.rot,
+          }}
+        >
+          <HeartIcon className="h-full w-full" />
+        </span>
+      ))}
+    </>
+  );
+}
+
 export function Envelope({ config }: { config: PartyConfig }) {
   const [stage, setStage] = useState<Stage>("closed");
   const [tilt, setTilt] = useState({ x: 0, y: 0 });
+  /** set when the seal is pressed: where the heart-wipe grows from */
+  const [wipe, setWipe] = useState<{ x: number; y: number } | null>(null);
   const wrap = useRef<HTMLDivElement>(null);
   const enterParty = useParty((s) => s.enterParty);
+  const T = useMemo(() => makeT(config), [config]);
+  const timers = useRef<number[]>([]);
+
+  useEffect(() => () => timers.current.forEach((t) => window.clearTimeout(t)), []);
+
+  /** the heart-shaped wax seal is the one and only way into the party */
+  const pressSeal = (e: React.MouseEvent<HTMLButtonElement>) => {
+    if (wipe) return;
+    const r = e.currentTarget.getBoundingClientRect();
+    setWipe({ x: r.left + r.width / 2, y: r.top + r.height / 2 });
+    // the pink heart has swallowed the screen at ~700 ms → open the doors underneath
+    timers.current.push(window.setTimeout(enterParty, 720));
+  };
 
   const doOpen = () => {
     if (stage !== "closed") return;
     setStage("flap");
-    setTimeout(() => setStage("fly"), 520);       // letter slides out
-    setTimeout(() => setStage("dissolve"), 1050); // envelope melts into shreds
-    setTimeout(() => setStage("reading"), 1650);  // letter arrives up front
+    timers.current.push(
+      window.setTimeout(() => setStage("fly"), 520),       // letter slides out
+      window.setTimeout(() => setStage("dissolve"), 1050), // envelope melts into shreds
+      window.setTimeout(() => setStage("reading"), 1650)   // letter arrives up front
+    );
   };
 
   const onMove = (e: React.MouseEvent) => {
@@ -134,13 +192,21 @@ export function Envelope({ config }: { config: PartyConfig }) {
       </div>
 
       <div className="relative h-full w-full flex flex-col items-center justify-center gap-6 px-4 py-8 overflow-y-auto scroll-none">
-        {/* kicker */}
-        <div className="anim-rise" style={{ animationDelay: "80ms" }}>
+        {/* kicker + title */}
+        <div
+          className="anim-rise flex flex-col items-center gap-2 transition-opacity duration-500"
+          style={{ animationDelay: "80ms", opacity: stage === "closed" ? 1 : 0 }}
+        >
           <div className="rounded-full bg-white/85 soft-shadow-sm px-5 py-2 -rotate-1">
             <span className="font-display font-bold uppercase tracking-[0.18em] text-[11px] md:text-xs text-punch-deep">
               {config.event.kicker}
             </span>
           </div>
+          {config.event.title && (
+            <h1 className="paper-script text-center text-[34px] md:text-[42px] leading-tight text-white text-soft-shadow">
+              {config.event.title}
+            </h1>
+          )}
         </div>
 
         {/* ---------- envelope ---------- */}
@@ -198,13 +264,13 @@ export function Envelope({ config }: { config: PartyConfig }) {
                 >
                   <div className="rounded-[20px] bg-[linear-gradient(180deg,#fffafc,#fff0f6)] border border-white soft-shadow-sm px-6 py-5">
                     <p className="font-body text-[10px] uppercase tracking-[0.2em] text-ink-soft font-semibold">
-                      Lá thư dành cho
+                      {T("envelopeLabel")}
                     </p>
                     <p className="font-display font-extrabold text-punch-deep text-3xl md:text-4xl leading-tight">
                       {config.recipient.name}
                     </p>
                     <p className="mt-2 text-xs text-ink-soft font-medium">
-                      từ {config.sender.name} — mở ra đọc nhé
+                      {T("envelopeFrom")}
                     </p>
                   </div>
                 </div>
@@ -220,10 +286,10 @@ export function Envelope({ config }: { config: PartyConfig }) {
                   <div className="absolute inset-0 bg-stripes opacity-60" />
                   <div className="absolute inset-x-0 top-[36%] flex flex-col items-center gap-0.5">
                     <span className="paper-hand !text-[20px] !leading-tight text-[#7c2a50]">
-                      Gửi: {config.recipient.name}
+                      {T("envelopeAddress")}
                     </span>
                     <span className="paper-hand !text-[14px] !leading-tight text-[#7c2a50]/75">
-                      từ: {config.sender.name}
+                      {T("envelopeAddressFrom")}
                     </span>
                   </div>
                   <div className="stamp absolute right-[7%] top-[32%] rotate-6">
@@ -294,11 +360,18 @@ export function Envelope({ config }: { config: PartyConfig }) {
             >
               {reading ? (
                 <div
-                  onClick={enterParty}
-                  className="relative max-h-[70vh] overflow-y-auto scroll-pink rounded-[12px] -rotate-1 cursor-pointer hover:scale-[1.02] transition-transform duration-300 w-full"
+                  className="relative max-h-[70vh] overflow-y-auto scroll-pink rounded-[12px] -rotate-1 w-full transition-all duration-[650ms] ease-in"
+                  style={
+                    wipe
+                      ? { transform: "translateY(-6vh) scale(.92) rotate(-3deg)", opacity: 0.0 }
+                      : undefined
+                  }
                 >
-                  <LetterPaper config={config} />
-                  <div className="absolute inset-0 bg-gradient-to-t from-punch-deep/20 via-transparent to-transparent pointer-events-none" />
+                  <LetterPaper
+                    config={config}
+                    onSeal={pressSeal}
+                    sealLabel={T("enterAria")}
+                  />
                 </div>
               ) : (
                 <div className="relative max-h-[70vh] overflow-y-auto scroll-pink rounded-[12px] -rotate-1">
@@ -314,16 +387,42 @@ export function Envelope({ config }: { config: PartyConfig }) {
           <div className="anim-rise flex flex-col items-center gap-2" style={{ animationDelay: "200ms" }}>
             <HeartIcon className="w-8 h-8 text-white anim-heart" />
             <p className="font-body text-white/95 text-sm font-medium text-center text-soft-shadow">
-              nhấn vào phong bì để mở
+              {T("envelopeTap")}
             </p>
           </div>
         )}
         {(stage === "flap" || stage === "fly" || stage === "dissolve") && (
           <p className="font-body text-white/95 text-sm font-medium anim-bob text-center text-soft-shadow">
-            lá thư đang bay ra...
+            {T("letterFlying")}
           </p>
         )}
       </div>
+
+      {/* hint: the heart on the letter is the way in (text only — not a button) */}
+      {reading && (
+        <div
+          className="pointer-events-none fixed inset-x-0 bottom-[max(18px,env(safe-area-inset-bottom))] z-30 flex justify-center px-6 anim-rise transition-opacity duration-300"
+          style={{ animationDelay: "350ms", opacity: wipe ? 0 : 1 }}
+        >
+          <p className="flex items-center gap-2 text-center font-body text-sm font-medium text-white/95 text-soft-shadow">
+            <HeartIcon className="anim-heart h-4 w-4 shrink-0" />
+            {T("enterHint")}
+          </p>
+        </div>
+      )}
+
+      {/* heart wipe: grows out of the seal and floods the screen, then the party opens beneath it */}
+      {wipe && (
+        <div
+          className="pointer-events-none fixed z-[70]"
+          style={{ left: wipe.x, top: wipe.y, width: 0, height: 0 }}
+        >
+          <SealBurst />
+          <span className="heart-wipe">
+            <HeartIcon className="h-full w-full" />
+          </span>
+        </div>
+      )}
     </div>
   );
 }

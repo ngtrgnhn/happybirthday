@@ -2,15 +2,14 @@ import { useEffect, useMemo, useRef } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { useParty, Phase } from "../store";
-import {
-  CHAR_STAND, CHAR_LIGHT_SPOT, CHAR_OFFSCREEN, CHAR_SPEED, FLAME_Y, CANDY,
-} from "./constants";
+import { CHAR_OFFSCREEN, CHAR_SPEED, FLAME_Y, CANDY, stands } from "./constants";
 import { toonGradient, bannerTexture, puffTexture, blobShadowTexture } from "./textures";
+import { breath } from "./interaction";
+import { easeOutBack, clamp01 } from "./anim";
 
 type Mode = "hidden" | "walk" | "pray" | "blow" | "banner" | "light";
 type WalkTarget = "stand" | "light" | "banner" | "exit";
 
-const BANNER_STAND = new THREE.Vector3(-0.42, 0, 1.62);
 const CAKE = new THREE.Vector3(0, 0, 0);
 
 interface Sim {
@@ -32,7 +31,12 @@ export function Character({ bannerText, bannerSub }: { bannerText: string; banne
 
   const grad = useMemo(() => toonGradient(), []);
   const tex = useMemo(() => bannerTexture(bannerText, bannerSub), [bannerText, bannerSub]);
+  useEffect(() => () => tex.dispose(), [tex]);
+  const bannerGeo = useMemo(() => new THREE.PlaneGeometry(2.2, 0.86, 30, 6), []);
+  const bannerBase = useMemo(() => Float32Array.from(bannerGeo.getAttribute("position").array as ArrayLike<number>), [bannerGeo]);
   const puffTex = useMemo(() => puffTexture(), []);
+  const tmpV = useMemo(() => new THREE.Vector3(), []);
+  const tmpM = useMemo(() => new THREE.Matrix4(), []);
   const shadowTex = useMemo(() => blobShadowTexture(), []);
 
   const root = useRef<THREE.Group>(null);
@@ -45,6 +49,7 @@ export function Character({ bannerText, bannerSub }: { bannerText: string; banne
   const tailL = useRef<THREE.Group>(null);
   const tailR = useRef<THREE.Group>(null);
   const eyes = useRef<THREE.Group>(null);
+  const brows = useRef<THREE.Group>(null);
   const mouthOpen = useRef<THREE.Mesh>(null);
   const smile = useRef<THREE.Mesh>(null);
   const banner = useRef<THREE.Group>(null);
@@ -81,15 +86,16 @@ export function Character({ bannerText, bannerSub }: { bannerText: string; banne
     sim.clock = 0;
     const r = root.current;
     if (!r) return;
+    const S = stands(size.width / Math.max(size.height, 1));
     switch (phase) {
       case "approach":
         r.visible = true;
-        r.position.copy(CHAR_OFFSCREEN);
+        r.position.copy(S.offscreen);
         sim.mode = "walk";
-        sim.walkTo.copy(CHAR_STAND);
+        sim.walkTo.copy(S.stand);
         sim.walkTarget = "stand";
         sim.arrived = false;
-        sim.faceY = Math.atan2(CHAR_STAND.x + 1, -(CHAR_STAND.z));
+        sim.faceY = Math.atan2(S.stand.x + 1, -S.stand.z);
         break;
       case "blowing":
         sim.mode = "blow";
@@ -97,13 +103,13 @@ export function Character({ bannerText, bannerSub }: { bannerText: string; banne
         break;
       case "blown":
         sim.mode = "walk";
-        sim.walkTo.copy(BANNER_STAND);
+        sim.walkTo.copy(S.banner);
         sim.walkTarget = "banner";
         sim.bannerFired = false;
         break;
       case "relight":
         sim.mode = "walk";
-        sim.walkTo.copy(CHAR_LIGHT_SPOT);
+        sim.walkTo.copy(S.light);
         sim.walkTarget = "light";
         sim.arrived = false;
         sim.relitFired = false;
@@ -184,6 +190,16 @@ export function Character({ bannerText, bannerSub }: { bannerText: string; banne
       }
     }
 
+    /* ----- the breath the candle flames lean away from ----- */
+    breath.active = sim.mode === "blow" && sim.clock > 0.6;
+    if (sim.mode === "blow") {
+      const bx = CAKE.x - r.position.x;
+      const bz = CAKE.z - r.position.z;
+      const bl = Math.hypot(bx, bz) || 1;
+      breath.dx = bx / bl;
+      breath.dz = bz / bl;
+    }
+
     /* ----- timed transitions ----- */
     if (sim.mode === "blow") {
       // 0 -> 0.55s inhale, then the real blow
@@ -202,7 +218,7 @@ export function Character({ bannerText, bannerSub }: { bannerText: string; banne
       }
       if (sim.clock > 1.9) {
         sim.mode = "walk";
-        sim.walkTo.copy(CHAR_OFFSCREEN);
+        sim.walkTo.copy(stands(size.width / Math.max(size.height, 1)).offscreen);
         sim.walkTarget = "exit";
         sim.arrived = false;
       }
@@ -288,6 +304,12 @@ export function Character({ bannerText, bannerSub }: { bannerText: string; banne
       b.t = 0;
     }
 
+    /* brows: up while inhaling / cheering, relaxed otherwise */
+    if (brows.current) {
+      const up = sim.mode === "banner" ? 0.02 : sim.mode === "blow" && sim.clock < 0.55 ? 0.028 : sim.mode === "pray" ? -0.006 : 0;
+      brows.current.position.y = THREE.MathUtils.damp(brows.current.position.y, up, 12, dt);
+    }
+
     /* mouth open (blow) */
     if (mouthOpen.current) {
       const s = THREE.MathUtils.damp(mouthOpen.current.scale.y, openMouth, 14, dt);
@@ -301,28 +323,46 @@ export function Character({ bannerText, bannerSub }: { bannerText: string; banne
     if (match.current) match.current.visible = matchOn;
     if (matchLight.current)
       matchLight.current.intensity = THREE.MathUtils.damp(
-        matchLight.current.intensity, matchOn ? 0.9 : 0, 10, dt
+        matchLight.current.intensity, matchOn ? 2.2 : 0, 10, dt
       );
 
-    /* banner follows her, always faces camera */
+    /* banner follows her, always faces camera: it unfurls, then its cloth ripples */
     if (banner.current) {
       const show = sim.mode === "banner";
       banner.current.visible = show || banner.current.visible;
       if (show) {
-        const aspect = size.width / size.height;
-        const sc = THREE.MathUtils.clamp(aspect * 1.05, 0.55, 1);
-        const targetScale = sc;
-        const cur = banner.current.scale.x;
-        const ns = THREE.MathUtils.damp(cur, targetScale, 6, dt);
-        banner.current.scale.setScalar(Math.max(ns, 0.001));
-        banner.current.position.set(
-          r.position.x,
-          2.12 + Math.sin(t * 2.4) * 0.03,
-          r.position.z + 0.12
-        );
-        const az = Math.atan2(camera.position.x - r.position.x, camera.position.z - r.position.z);
+        // hover above her head — but never wider than the screen, and never off its sides
+        // (a phone in portrait only sees ~2 world units across)
+        const cam = camera as THREE.PerspectiveCamera;
+        const aspect = size.width / Math.max(size.height, 1);
+        cam.updateMatrixWorld();
+        tmpM.copy(cam.matrixWorld).invert();
+        const bv = tmpV.set(r.position.x, 2.12 + Math.sin(t * 2.4) * 0.03, r.position.z + 0.12).applyMatrix4(tmpM);
+        const halfVis = Math.max(0.3, -bv.z) * Math.tan(THREE.MathUtils.degToRad(cam.fov) / 2) * aspect;
+        const sc = Math.min(1, (0.86 * halfVis) / 1.1);
+        const lim = Math.max(0, 1 - 0.05 - (1.1 * sc) / halfVis);
+        bv.x = THREE.MathUtils.clamp(bv.x / halfVis, -lim, lim) * halfVis;
+        bv.applyMatrix4(cam.matrixWorld);
+        const u = (banner.current.userData.u ?? 0) as number;
+        const nu = Math.min(1, u + dt / 0.9);
+        banner.current.userData.u = nu;
+        const e = easeOutBack(clamp01(nu), 1.3);
+        banner.current.scale.set(Math.max(sc * e, 0.001), Math.max(sc * (0.55 + 0.45 * e), 0.001), sc);
+        banner.current.position.copy(bv);
+        const az = Math.atan2(camera.position.x - bv.x, camera.position.z - bv.z);
         banner.current.rotation.y = az;
         banner.current.rotation.z = Math.sin(t * 1.8) * 0.02;
+        // ripple the cloth
+        const pa = bannerGeo.getAttribute("position") as THREE.BufferAttribute;
+        for (let i = 0; i < pa.count; i++) {
+          const x = bannerBase[i * 3];
+          const y = bannerBase[i * 3 + 1];
+          pa.setZ(i, Math.sin(x * 2.4 + t * 3.2) * 0.035 + Math.sin(x * 5.1 - t * 2.1 + y * 2) * 0.012);
+          pa.setY(i, y + Math.sin(x * 2.4 + t * 3.2 + 1) * 0.012);
+        }
+        pa.needsUpdate = true;
+      } else {
+        banner.current.userData.u = 0;
       }
     }
 
@@ -418,6 +458,23 @@ export function Character({ bannerText, bannerSub }: { bannerText: string; banne
             <torusGeometry args={[0.355, 0.03, 8, 24]} />
             <meshToonMaterial color="#ffffff" gradientMap={grad} />
           </mesh>
+          <mesh position={[0, -0.03, 0]}>
+            <cylinderGeometry args={[0.37, 0.4, 0.08, 24]} />
+            <meshToonMaterial color="#fff4f8" gradientMap={grad} />
+          </mesh>
+          {/* ribbon belt + bow */}
+          <mesh position={[0, 0.56, 0]}>
+            <cylinderGeometry args={[0.198, 0.205, 0.05, 20]} />
+            <meshToonMaterial color={CANDY.punchDeep} gradientMap={grad} />
+          </mesh>
+          <mesh position={[0, 0.56, -0.2]} rotation={[0, 0, 0.5]} scale={[1.3, 0.8, 0.6]}>
+            <sphereGeometry args={[0.04, 10, 8]} />
+            <meshToonMaterial color={CANDY.punchDeep} gradientMap={grad} />
+          </mesh>
+          <mesh position={[0.06, 0.56, -0.2]} rotation={[0, 0, -0.5]} scale={[1.3, 0.8, 0.6]}>
+            <sphereGeometry args={[0.04, 10, 8]} />
+            <meshToonMaterial color={CANDY.punchDeep} gradientMap={grad} />
+          </mesh>
           <mesh position={[0, 0.68, 0]}>
             <cylinderGeometry args={[0.145, 0.16, 0.2, 16]} />
             <meshToonMaterial color={CANDY.dress} gradientMap={grad} />
@@ -474,7 +531,7 @@ export function Character({ bannerText, bannerSub }: { bannerText: string; banne
                 <sphereGeometry args={[0.035, 10, 10]} />
                 <meshBasicMaterial color="#ffb347" />
               </mesh>
-              <pointLight ref={matchLight} position={[0, 0.24, 0]} color="#ffb066" intensity={0} distance={3.2} decay={1.6} />
+              <pointLight ref={matchLight} position={[0, 0.24, 0]} color="#ffb066" intensity={0} distance={3.6} decay={1.6} />
             </group>
           </group>
 
@@ -529,21 +586,54 @@ export function Character({ bannerText, bannerSub }: { bannerText: string; banne
             </group>
             {/* face */}
             <group ref={eyes}>
-              <mesh position={[0.105, -0.01, 0.25]}>
-                <sphereGeometry args={[0.038, 10, 10]} />
-                <meshToonMaterial color={CANDY.ink} gradientMap={grad} />
-              </mesh>
-              <mesh position={[0.117, 0.005, 0.282]}>
-                <sphereGeometry args={[0.012, 8, 8]} />
-                <meshBasicMaterial color="#ffffff" />
-              </mesh>
-              <mesh position={[-0.105, -0.01, 0.25]}>
-                <sphereGeometry args={[0.038, 10, 10]} />
-                <meshToonMaterial color={CANDY.ink} gradientMap={grad} />
-              </mesh>
-              <mesh position={[-0.093, 0.005, 0.282]}>
-                <sphereGeometry args={[0.012, 8, 8]} />
-                <meshBasicMaterial color="#ffffff" />
+              {[1, -1].map((sx) => (
+                <group key={sx} position={[sx * 0.105, -0.008, 0.248]}>
+                  <mesh scale={[1, 1.18, 0.72]}>
+                    <sphereGeometry args={[0.046, 14, 12]} />
+                    <meshToonMaterial color={CANDY.ink} gradientMap={grad} />
+                  </mesh>
+                  {/* warm iris glow */}
+                  <mesh position={[0, -0.012, 0.022]} scale={[1, 0.7, 0.4]}>
+                    <sphereGeometry args={[0.03, 10, 8]} />
+                    <meshBasicMaterial color="#8a3b63" transparent opacity={0.85} />
+                  </mesh>
+                  {/* two sparkles */}
+                  <mesh position={[sx * 0.014, 0.02, 0.034]}>
+                    <sphereGeometry args={[0.0155, 8, 8]} />
+                    <meshBasicMaterial color="#ffffff" />
+                  </mesh>
+                  <mesh position={[-sx * 0.016, -0.022, 0.034]}>
+                    <sphereGeometry args={[0.0075, 8, 8]} />
+                    <meshBasicMaterial color="#ffffff" />
+                  </mesh>
+                  {/* lash flick */}
+                  <mesh position={[sx * 0.046, 0.03, 0.01]} rotation={[0, 0, -sx * 0.9]}>
+                    <capsuleGeometry args={[0.005, 0.028, 2, 4]} />
+                    <meshBasicMaterial color={CANDY.ink} />
+                  </mesh>
+                </group>
+              ))}
+            </group>
+            {/* brows lift when she inhales / cheers */}
+            <group ref={brows}>
+              {[1, -1].map((sx) => (
+                <mesh key={sx} position={[sx * 0.108, 0.08, 0.262]} rotation={[0, 0, Math.PI / 2 - sx * 0.14]}>
+                  <capsuleGeometry args={[0.0075, 0.05, 3, 6]} />
+                  <meshToonMaterial color="#5b3321" gradientMap={grad} />
+                </mesh>
+              ))}
+            </group>
+            {/* hair bow */}
+            <group position={[-0.2, 0.2, 0.1]} rotation={[0.1, 0.3, -0.35]}>
+              {[1, -1].map((sx) => (
+                <mesh key={sx} position={[sx * 0.05, 0, 0]} rotation={[0, 0, sx * 0.45]} scale={[1.25, 0.8, 0.55]}>
+                  <sphereGeometry args={[0.05, 12, 10]} />
+                  <meshToonMaterial color={CANDY.punch} gradientMap={grad} />
+                </mesh>
+              ))}
+              <mesh>
+                <sphereGeometry args={[0.026, 10, 8]} />
+                <meshToonMaterial color={CANDY.punchDeep} gradientMap={grad} />
               </mesh>
             </group>
             <mesh position={[0.165, -0.075, 0.205]} scale={[1, 0.6, 0.42]}>
@@ -568,8 +658,7 @@ export function Character({ bannerText, bannerSub }: { bannerText: string; banne
 
       {/* banner — world space, billboards to camera */}
       <group ref={banner} visible={false} scale={0.001}>
-        <mesh>
-          <planeGeometry args={[2.2, 0.86]} />
+        <mesh geometry={bannerGeo}>
           <meshBasicMaterial map={tex} transparent side={THREE.DoubleSide} />
         </mesh>
         <mesh position={[-1.06, -0.02, -0.01]}>

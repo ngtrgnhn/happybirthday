@@ -1,101 +1,116 @@
-import { useRef } from "react";
-import { useThree } from "@react-three/fiber";
+import { useEffect } from "react";
+import * as THREE from "three";
+import { useThree, type ThreeEvent } from "@react-three/fiber";
 import type { PartyConfig } from "../config";
 import { useParty } from "../store";
+import { setCursor, DEBUG } from "../dom";
 import { CameraRig } from "./CameraRig";
 import { Cake } from "./Cake";
 import { Character } from "./Character";
-import {
-  Room, Table, Gifts, Balloons, Bunting, FloatingHearts,
-  Sparkles, FallingConfetti, ConfettiBurst, Rug,
-  FlowerDecorations, TableSettings, SmallCandles, Bubbles, TwinklingStars,
-  HangingLights,
-} from "./Decor";
+import { Room, Rug } from "./Room";
+import { Table, Gifts, TableSettings } from "./Table";
+import { Balloons, Numerals } from "./Balloons";
+import { Garland } from "./Garland";
+import { AmbientConfetti, ConfettiCannons, Glitter, FloatingHearts, WishFx } from "./Particles";
+import { EnvProvider } from "./Env";
+import { RigLights } from "./Lights";
+import { Shadowed } from "./anim";
+import { cakeIsClickable } from "./interaction";
+import { TABLE_H } from "./constants";
 
+/**
+ * The cake IS the button: pressing it walks up to the cake / blows / relights.
+ * Events arrive through the shared DOM root (see <Canvas eventSource> in App),
+ * because the scroll page covers the canvas.
+ */
 function CakeHitArea() {
-  const gl = useThree((s) => s.gl);
-  const phase = useParty((s) => s.phase);
-  const charReady = useParty((s) => s.charReady);
-  const startApproach = useParty((s) => s.startApproach);
-  const requestBlow = useParty((s) => s.requestBlow);
-  const requestRelight = useParty((s) => s.requestRelight);
-  const cursorRef = useRef(false);
-
-  const handleClick = () => {
-    if (phase === "party") {
-      startApproach();
-    } else if (phase === "approach" && charReady) {
-      requestBlow();
-    } else if (phase === "blown") {
-      requestRelight();
-    }
+  const hover = (on: boolean) => {
+    const ok = on && cakeIsClickable();
+    setCursor(ok ? "pointer" : "");
+    useParty.getState().setCakeHover(ok);
   };
 
-  const handlePointerOver = () => {
-    const clickable = phase === "party" || (phase === "approach" && charReady) || phase === "blown";
-    if (clickable && !cursorRef.current) {
-      gl.domElement.style.cursor = "pointer";
-      cursorRef.current = true;
-    }
-  };
-
-  const handlePointerOut = () => {
-    if (cursorRef.current) {
-      gl.domElement.style.cursor = "";
-      cursorRef.current = false;
-    }
+  const handleClick = (e: ThreeEvent<MouseEvent>) => {
+    if (!cakeIsClickable()) return;
+    e.stopPropagation();
+    const s = useParty.getState();
+    if (s.phase === "party") s.startApproach();
+    else if (s.phase === "approach") s.requestBlow();
+    else if (s.phase === "blown") s.requestRelight();
+    hover(false);
   };
 
   return (
     <mesh
-      position={[0, 1.5, 0]}
+      position={[0, (TABLE_H + 3.15) / 2, 0]}
       onClick={handleClick}
-      onPointerOver={handlePointerOver}
-      onPointerOut={handlePointerOut}
+      onPointerOver={(e) => {
+        e.stopPropagation();
+        hover(true);
+      }}
+      onPointerMove={() => hover(true)}
+      onPointerOut={() => hover(false)}
     >
-      <cylinderGeometry args={[1.2, 1.2, 2.5, 16]} />
-      <meshBasicMaterial transparent opacity={0} depthWrite={false} />
+      <cylinderGeometry args={[1.12, 1.12, 3.15 - TABLE_H, 20]} />
+      <meshBasicMaterial colorWrite={false} depthWrite={false} />
     </mesh>
   );
 }
 
+/** ?debug only: `window.__cakeXY()` → where the cake is on screen (CSS px), so tests can click it wherever the camera is.
+ *  Pass a world point `[x, y, z]` to project any other spot (e.g. to measure camera parallax). */
+function DebugProbe() {
+  const camera = useThree((s) => s.camera);
+  const size = useThree((s) => s.size);
+  useEffect(() => {
+    if (!DEBUG) return;
+    const w = window as unknown as {
+      __cakeXY?: (p?: [number, number, number]) => { x: number; y: number };
+    };
+    w.__cakeXY = (p = [0, 1.7, 0]) => {
+      const v = new THREE.Vector3(p[0], p[1], p[2]).project(camera);
+      return { x: (v.x * 0.5 + 0.5) * size.width, y: (-v.y * 0.5 + 0.5) * size.height };
+    };
+    return () => {
+      delete w.__cakeXY;
+    };
+  }, [camera, size]);
+  return null;
+}
+
 export function Experience({ config }: { config: PartyConfig }) {
   return (
-    <>
+    <EnvProvider>
+      <DebugProbe />
       <color attach="background" args={["#ffc9de"]} />
-      <fog attach="fog" args={["#ffc9de", 9.5, 22]} />
+      <fog attach="fog" args={["#ffc9de", 17, 44]} />
 
-      {/* Enhanced lighting setup */}
-      <hemisphereLight args={["#ffe9f3", "#e79fbe", 1.1]} />
-      <ambientLight intensity={0.5} color="#ffd9e8" />
-      <directionalLight position={[4.5, 6.5, 3.5]} intensity={1.2} color="#fff2f6" castShadow={false} />
-      <directionalLight position={[-5, 3.5, -2]} intensity={0.4} color="#ffc2dc" />
-      <directionalLight position={[0, 8, 0]} intensity={0.3} color="#ffffff" />
-      <pointLight position={[0, 3, 2]} intensity={0.6} color="#ff9ec6" distance={8} decay={2} />
-      <pointLight position={[-3, 2, -1]} intensity={0.4} color="#ffd166" distance={6} decay={2} />
-
+      <RigLights />
       <CameraRig />
 
       <Room />
       <Rug />
-      <Table />
-      <TableSettings />
-      <SmallCandles />
-      <FlowerDecorations />
-      <Cake candleCount={config.cake.candles} age={config.recipient.age} />
-      <CakeHitArea />
-      <Character bannerText={config.banner.text} bannerSub={config.banner.sub} />
 
-      <Gifts />
-      <Balloons />
-      <Bunting />
+      <Shadowed>
+        <Table />
+        <TableSettings />
+        <Cake candleCount={config.cake.candles} age={config.recipient.age} topper={config.cake.topper} />
+        <Gifts />
+        <Balloons />
+        <Numerals age={config.recipient.age} />
+      </Shadowed>
+      <CakeHitArea />
+      <Shadowed receive={false}>
+        <Character bannerText={config.banner.text} bannerSub={config.banner.sub} />
+      </Shadowed>
+
+      <Garland text={config.scene.garland} />
+
       <FloatingHearts />
-      <Sparkles />
-      <FallingConfetti />
-      <ConfettiBurst />
-      <Bubbles />
-      <TwinklingStars />
-      <HangingLights />
-    </>
+      <Glitter />
+      <AmbientConfetti />
+      <ConfettiCannons candleCount={config.cake.candles} />
+      <WishFx candleCount={config.cake.candles} />
+    </EnvProvider>
   );
 }

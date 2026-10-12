@@ -1,286 +1,133 @@
-# Hướng dẫn thay đổi nội dung web
+# Chỉnh nội dung — `public/config.json`
 
-## ⚠️ QUAN TRỌNG: Cách thay đổi nội dung
+Toàn bộ chữ, số, ảnh trên web đều đọc từ **một file duy nhất: `public/config.json`**. Không cần sửa code.
 
-File cấu hình chính: **`public/config.json`**
+## 1. Sửa xong là web tự đổi
 
-### 📝 Các bước thay đổi:
+| Tình huống | Điều xảy ra |
+|---|---|
+| Đang chạy `npm run dev` | Lưu file → trang đang mở đổi **ngay lập tức**, không F5 (Vite đẩy nội dung mới qua websocket; ngoài ra cứ 1,5 s trang tự kiểm tra lại). |
+| Đã deploy (Vercel, GitHub Pages, host tĩnh…) | `config.json` được tải **lúc chạy** (không bị nhét cứng vào file JS). Trang đang mở hỏi lại file mỗi 5 s, khi quay lại tab và khi có mạng trở lại → thay file trên host (hoặc push rồi đợi deploy xong) là mọi người đang mở trang tự thấy nội dung mới. **Không cần hard refresh, không cần xoá cache.** |
+| JSON sai cú pháp (thiếu dấu phẩy, ngoặc…) | Trang **giữ nguyên nội dung cũ**, không vỡ. Ở dev / `?debug` có dải báo lỗi phía trên. |
+| Không tải được `config.json` | Dùng bản chụp lúc build; nếu không có thì dùng mặc định → không bao giờ ra trang trắng. |
+| Thiếu một khoá | Tự dùng giá trị mặc định (xem `src/config.ts`). Sai kiểu (ví dụ `"age": "17"`) thì tự ép kiểu. |
 
-1. **Mở file `public/config.json`** trong editor
+Chỉ khi nội dung **thật sự đổi** thì trang mới vẽ lại; trạng thái đang xem (đã vào tiệc, đang thổi nến…) không bị reset.
 
-2. **Thay đổi nội dung theo ý muốn** (xem cấu trúc bên dưới)
+Mở DevTools → Console, thấy `✅ config.json applied` (ở dev / `?debug`) là bản mới đã được áp dụng.
 
-3. **Commit và push lên GitHub:**
-```bash
-git add public/config.json
-git commit -m "Cập nhật nội dung"
-git push
-```
+## 2. Các khoá
 
-4. **Đợi Vercel rebuild** (1-2 phút)
+### `recipient` — người nhận
+| Khoá | Ý nghĩa | Hiện ở đâu |
+|---|---|---|
+| `name` | tên đầy đủ | phong bì, thanh trên cùng, tiêu đề tab |
+| `nickname` | cách gọi thân mật | các câu trong thư/phần quà (`{nickname}`) |
+| `age` | tuổi (0–150) | tem thư, thanh trên cùng, **số bóng bay 3D bên phải bàn tiệc**, bảng tuổi trên bánh |
 
-5. **Mở lại website và hard refresh:**
-   - **Windows:** `Ctrl + Shift + R` hoặc `Ctrl + F5`
-   - **Mac:** `Cmd + Shift + R`
-   - **Mobile:** Xóa cache browser hoặc mở tab ẩn danh
+### `sender` — người gửi
+`name` (hiện ở phong bì, chân trang), `signature` (chữ ký cuối thư).
 
-6. **Kiểm tra Console (F12)** để xem log:
-   - ✅ "Config loaded successfully" = OK
-   - ❌ "Failed to load config.json" = Lỗi
+### `event`
+`kicker` (dòng nhỏ trên phong bì), `title`, `date` (ví dụ `"18 . 10"`), `time`, `place` (bỏ trống được — dấu phẩy thừa tự biến mất).
 
-## 🔧 Nếu nội dung KHÔNG thay đổi:
+### `letter` — nội dung bức thư
+`heading` (dòng chào), `body` (đoạn chính), `wish` (câu điều ước, được tô nổi bật), `ps` (tái bút, để `""` nếu không dùng).
 
-### Cách 1: Hard Refresh (khuyên dùng)
-- **Windows:** `Ctrl + Shift + R`
-- **Mac:** `Cmd + Shift + R`
-- **Mobile:** Mở tab ẩn danh
+### `banner` — biểu ngữ sau khi thổi nến
+`text` (dòng lớn), `sub` (dòng nhỏ). Cô bé giơ biểu ngữ này lên; tự co lại cho vừa màn hình điện thoại.
 
-### Cách 2: Thêm `?reload=true` vào URL
-```
-https://your-site.vercel.app/?reload=true
-```
+### `cake` — bánh kem
+| Khoá | Ý nghĩa |
+|---|---|
+| `candles` | số nến (1–12). Trên bánh hiển thị 3–7 nến. |
+| `flavor` | vị bánh, hiện trong dòng gợi ý *chạm vào chiếc bánh **kem dâu** để lại gần* (và dùng được ở mọi chỗ qua `{flavor}`) |
+| `topper` | **chữ trên cành trái tim cắm đỉnh bánh** (ví dụ `"HB"`, `"17"`, `"A♥T"`). Nên ≤ 4 ký tự; chữ dài hơn sẽ tự thu nhỏ. |
 
-### Cách 3: Xóa cache browser
-1. Mở DevTools (F12)
-2. Chuột phải vào nút Refresh
-3. Chọn "Empty Cache and Hard Reload"
+### `scene` — không gian 3D
+| Khoá | Ý nghĩa |
+|---|---|
+| `garland` | chữ trên **dây cờ** treo giữa phòng, mỗi chữ một lá cờ (tối đa 26 ký tự, tự viết hoa, dấu cách = chỗ trống, hỗ trợ tiếng Việt có dấu). Mặc định `"HAPPY BIRTHDAY"`. |
+| `quality` | `"auto"` (mặc định) \| `"high"` \| `"medium"` \| `"low"` — xem mục 4. |
 
-### Cách 4: Kiểm tra Console
-1. Mở DevTools (F12)
-2. Chuyển sang tab "Console"
-3. Tìm log "✅ Config loaded successfully:"
-4. Nếu thấy config cũ → browser đang cache
-5. Nếu thấy config mới → code chưa update
-
-### Cách 5: Kiểm tra Network tab
-1. Mở DevTools (F12)
-2. Chuyển sang tab "Network"
-3. Refresh trang
-4. Tìm file `config.json`
-5. Kiểm tra "Response" tab để xem nội dung
-
-## 📋 Cấu trúc config.json
-
-### recipient (người nhận)
+### `memories` — ảnh kỷ niệm (mảng, vuốt ngang để xem)
 ```json
-{
-  "name": "Tên hiển thị trên thư",
-  "nickname": "biệt danh dùng trong text",
-  "age": 18
-}
+{ "src": "https://…/anh.jpg", "caption": "Chú thích" }
 ```
+`src` là link ảnh hoặc đường dẫn trong thư mục `public/` (ví dụ chép ảnh vào `public/photos/1.jpg` rồi ghi `"src": "photos/1.jpg"`). Phần tử thiếu `src` bị bỏ qua. Mảng rỗng → ẩn mục ảnh.
 
-### sender (người gửi)
+### `gifts` — hộp quà (mảng)
 ```json
-{
-  "name": "Tên người gửi",
-  "signature": "Chữ ký cuối thư"
-}
+{ "title": "Phiếu trà sữa", "message": "Nội dung hiện ra khi mở hộp" }
 ```
+Người xem chọn 1 hộp, quà bên trong là ngẫu nhiên và chỉ mở được một lần.
 
-### letter (nội dung thư)
+### `hints` — dòng chữ dẫn đường trong lúc làm nghi thức
+`approach` (cô bé đang tiến lại, chắp tay), `blowing` (thổi), `blown` (điều ước bay lên), `relight` (thắp lại nến).
+
+### `ui` — mọi chữ còn lại của giao diện
+Toàn bộ nhãn, nút, gợi ý, tiêu đề các phần (phong bì, thanh trên cùng, bức thư, ảnh, quà, chân trang, tiêu đề tab…) nằm ở đây, nên đổi ngôn ngữ/giọng văn chỉ cần sửa `config.json`. Khoá nào bỏ trống sẽ dùng mặc định trong `src/config.ts`.
+
+Một số khoá hay dùng:
+
+| Khoá | Mặc định / ý nghĩa |
+|---|---|
+| `enterHint` | dòng nhắc dưới bức thư: *chạm vào trái tim ở góc thư để vào tiệc* |
+| `enterAria` | nhãn trợ năng của trái tim (`"Vào tiệc"`) |
+| `tapCake` | *chạm vào chiếc bánh {flavor} để lại gần* |
+| `tapToBlow` / `tapToRelight` | *nhấn vào bánh kem để thổi nến / thắp lại nến* |
+| `steps` | 4 nhãn của thanh tiến trình: `["lại gần","cầu nguyện","thổi nến","điều ước"]` |
+| `letterNote` | ghi chú cuối thư (hỗ trợ `**đậm**`) |
+| `pageTitle` | tiêu đề tab trình duyệt |
+
+## 3. Chèn tên, tuổi… vào chữ (`{placeholder}`)
+
+Trong mọi chuỗi `ui.*` dùng được:
+
+`{name}` `{nickname}` `{age}` `{sender}` `{date}` `{time}` `{place}` `{title}` `{flavor}` `{candles}`  
+(riêng `giftBox` còn có `{n}` = số thứ tự hộp).
+
+Ví dụ: `"hudGreeting": "Chúc mừng sinh nhật {name}"` → *Chúc mừng sinh nhật Đỗ Thị Anh Thư*.  
+Đổi `recipient.name` thì mọi chỗ dùng `{name}` đổi theo.
+
+Định dạng: `**chữ đậm**` chỉ được hiểu trong `ui.letterNote`; các chuỗi khác là chữ thường.
+
+## 4. Chất lượng đồ hoạ & kiểm tra
+
+Cảnh 3D có 3 mức. Mặc định `auto`: máy khoẻ → `high`, điện thoại/máy yếu → `medium`/`low`; nếu đang chạy mà dưới ~27 khung/giây thì **tự hạ một mức** (tối đa hai lần). Ghim cứng bằng `"scene": { "quality": "high" }` hoặc thêm `?q=high|medium|low` vào URL (URL thắng config).
+
+| Mức | Nhận được |
+|---|---|
+| `high` | bóng đổ mềm, bloom (ánh nến, đèn dây, kim tuyến toả sáng), khử răng cưa MSAA ×4, nhiều confetti/kim tuyến, chi tiết cao |
+| `medium` | bóng đổ + bloom nhẹ, MSAA ×2, ít hạt hơn |
+| `low` | không bóng đổ/bloom, ít hạt nhất — mượt trên máy yếu |
+
+Người dùng bật "giảm chuyển động" trong hệ điều hành thì camera đứng yên (không lắc/parallax) và bớt confetti.
+
+Thêm `?debug` vào URL để: hiện dải báo lỗi JSON, in log `config.json applied`, và có `window.__party` (nhảy giai đoạn: `__party.setState({ phase: "party" })`) và `window.__quality`.
+
+## 5. Ví dụ nhanh
+
+Đổi tên + tuổi:
 ```json
-{
-  "heading": "Gửi Hà My,",
-  "body": "Nội dung chính của thư",
-  "wish": "Lời chúc/điều ước (hiển thị nổi bật)",
-  "ps": "Tái bút (có thể để trống)"
-}
+"recipient": { "name": "Nguyễn Văn A", "nickname": "bạn", "age": 20 }
 ```
 
-### memories (ảnh kỷ niệm - mảng 5 ảnh)
+Dây cờ và chữ trên bánh:
 ```json
-[
-  {
-    "src": "https://example.com/photo1.jpg",
-    "caption": "Chú thích ảnh 1"
-  }
-]
+"scene": { "garland": "CHÚC MỪNG 20 TUỔI", "quality": "auto" },
+"cake":  { "candles": 5, "flavor": "kem dâu", "topper": "20" }
 ```
 
-### gifts (hộp quà - mảng 3 quà)
+Đổi lời trên biểu ngữ:
 ```json
-[
-  {
-    "title": "Tên quà 1",
-    "message": "Nội dung khi mở quà"
-  }
-]
+"banner": { "text": "TUỔI MỚI RỰC RỠ NHÉ!", "sub": "mọi điều ước đều đã được nghe thấy" }
 ```
 
-### banner (băng rôn khi thổi nến)
-```json
-{
-  "text": "TUỔI MỚI RỰC RỠ NHÉ!",
-  "sub": "thương cậu nhiều hơn hôm qua"
-}
-```
+## 6. Cách chơi (để kiểm tra nhanh)
 
-### cake (bánh kem)
-```json
-{
-  "candles": 5,
-  "flavor": "kem dâu",
-  "topper": "HB"
-}
-```
-
-### hints (gợi ý)
-```json
-{
-  "approach": "Nhắm mắt, chắp tay...",
-  "blowing": "Hít một hơi thật sâu...",
-  "blown": "Điều ước đã bay lên...",
-  "relight": "Ánh lửa nhỏ trở lại..."
-}
-```
-
-## 💡 Ví dụ thay đổi nhanh
-
-### Đổi tên người nhận:
-```json
-"recipient": {
-  "name": "Minh Anh",
-  "nickname": "bé",
-  "age": 20
-}
-```
-
-### Đổi lời chúc:
-```json
-"letter": {
-  "wish": "Chúc cậu luôn vui vẻ và thành công!"
-}
-```
-
-### Đổi ảnh kỷ niệm:
-```json
-"memories": [
-  {
-    "src": "https://example.com/photo1.jpg",
-    "caption": "Kỷ niệm đầu tiên"
-  }
-]
-```
-
-## ⚠️ Lưu ý quan trọng
-
-- ✅ **CHỈ** thay đổi file `public/config.json`
-- ❌ **KHÔNG** thay đổi file `src/config.ts` (đây là file code)
-- ✅ File `config.json` sẽ được tự động copy vào `dist/` khi build
-- ✅ Vercel sẽ tự động rebuild khi push code
-- ✅ Browser sẽ tự động fetch config mới (không cache)
-
-## 🐛 Troubleshooting
-
-### Nội dung không thay đổi sau khi push?
-1. ✅ Kiểm tra Console (F12) xem có log "✅ Config loaded successfully" không
-2. ✅ Hard refresh: `Ctrl+Shift+R` (Windows) hoặc `Cmd+Shift+R` (Mac)
-3. ✅ Kiểm tra Vercel dashboard xem build đã hoàn thành chưa
-4. ✅ Đảm bảo đã commit đúng file `public/config.json`
-5. ✅ Thêm `?reload=true` vào URL
-
-### Ảnh không hiển thị?
-- ✅ URL ảnh phải là link trực tiếp (không phải link trang web)
-- ✅ URL phải bắt đầu bằng `https://`
-- ✅ Kiểm tra ảnh có thể truy cập công khai không
-- ✅ Thử mở URL ảnh trong tab mới
-
-### Build lỗi?
-- ✅ Kiểm tra JSON có đúng format không (dùng https://jsonlint.com)
-- ✅ Đảm bảo không có dấu phẩy thừa
-- ✅ Đảm bảo tất cả string đều có dấu ngoặc kép `""`
-- ✅ Kiểm tra console để xem lỗi chi tiết
-
-### Cache vẫn còn sau khi hard refresh?
-- ✅ Mở DevTools (F12) → Application → Storage → Clear site data
-- ✅ Hoặc mở tab ẩn danh (Incognito/Private)
-- ✅ Hoặc xóa cache browser hoàn toàn
-
-## Cấu trúc config.json
-
-### recipient (người nhận)
-- `name`: Tên hiển thị trên thư
-- `nickname`: Biệt danh dùng trong text
-- `age`: Số tuổi (hiển thị trên tem thư)
-
-### sender (người gửi)
-- `name`: Tên người gửi
-- `signature`: Chữ ký cuối thư
-
-### letter (nội dung thư)
-- `heading`: Lời mở đầu (vd: "Gửi Hà My,")
-- `body`: Nội dung chính
-- `wish`: Lời chúc/điều ước (hiển thị nổi bật)
-- `ps`: Tái bút (có thể để trống "")
-
-### memories (ảnh kỷ niệm)
-Mảng 5 ảnh, mỗi ảnh có:
-- `src`: URL ảnh (phải là link trực tiếp)
-- `caption`: Chú thích ảnh
-
-### gifts (hộp quà)
-Mảng 3 quà, mỗi quà có:
-- `title`: Tên quà
-- `message`: Nội dung khi mở quà
-
-### banner (băng rôn khi thổi nến)
-- `text`: Text chính trên băng rôn
-- `sub`: Text phụ nhỏ hơn
-
-### cake (bánh kem)
-- `candles`: Số nến (3-7)
-- `flavor`: Hương vị (chỉ để tham khảo)
-- `topper`: Text trên đỉnh bánh (2 ký tự)
-
-### hints (gợi ý)
-- `approach`: Hint khi cô bé đang đi tới
-- `blowing`: Hint khi đang thổi nến
-- `blown`: Hint sau khi thổi nến
-- `relight`: Hint khi thắp lại nến
-
-## Ví dụ thay đổi nhanh
-
-### Đổi tên người nhận:
-```json
-"recipient": {
-  "name": "Minh Anh",
-  "nickname": "bé",
-  "age": 20
-}
-```
-
-### Đổi lời chúc:
-```json
-"letter": {
-  "wish": "Chúc cậu luôn vui vẻ và thành công!"
-}
-```
-
-### Đổi ảnh kỷ niệm:
-```json
-"memories": [
-  {
-    "src": "https://example.com/photo1.jpg",
-    "caption": "Kỷ niệm đầu tiên"
-  }
-]
-```
-
-## Troubleshooting
-
-### Nội dung không thay đổi sau khi push?
-1. Kiểm tra Console (F12) xem có log "Config loaded successfully" không
-2. Hard refresh: Ctrl+Shift+R (Windows) hoặc Cmd+Shift+R (Mac)
-3. Kiểm tra Vercel dashboard xem build đã hoàn thành chưa
-4. Đảm bảo đã commit đúng file `public/config.json`
-
-### Ảnh không hiển thị?
-- Đảm bảo URL ảnh là link trực tiếp (không phải link trang web)
-- URL phải bắt đầu bằng `https://`
-- Kiểm tra ảnh có thể truy cập công khai không
-
-### Build lỗi?
-- Kiểm tra JSON có đúng format không (dùng https://jsonlint.com)
-- Đảm bảo không có dấu phẩy thừa
-- Đảm bảo tất cả string đều có dấu ngoặc kép ""
+1. Nhấn phong bì → thư bay ra. **Nhấn vào trái tim (con dấu sáp) ở góc dưới bên phải bức thư** để vào tiệc.
+2. Trong tiệc: **nhấn vào bánh kem** → cô bé bước tới và chắp tay cầu nguyện.
+3. **Nhấn bánh kem lần nữa** → hít sâu, thổi nến, confetti, biểu ngữ điều ước hiện ra.
+4. **Nhấn bánh kem** → cô bé thắp lại nến, tiệc tiếp tục.
+5. Nhấn vào **bóng bay** → bóng nổ (rồi mọc lại). Cuộn xuống để đọc thư, xem ảnh, mở quà.
