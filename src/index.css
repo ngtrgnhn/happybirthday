@@ -6,7 +6,7 @@
   --font-display: "Baloo 2", "Be Vietnam Pro", sans-serif;
   --font-body: "Be Vietnam Pro", sans-serif;
   --color-ink: #6b2447;
-  --color-ink-soft: #a05a7c;
+  --color-ink-soft: #8a3f64;
   --color-paper: #fffafc;
   --color-blush: #ffd9e8;
   --color-punch: #ff6aa9;
@@ -438,4 +438,136 @@ button:hover .gift:not(.open):not(.away) { transform: rotateX(-7deg) rotateY(-9d
 @media (prefers-reduced-motion: reduce) {
   .anim-floaty, .anim-bob, .anim-heart { animation: none; }
   .seal-live::before, .seal-live::after { animation: none; opacity: 0; }
+}
+
+/* ================= legibility layer: HUD chips, scroll cue, gallery (v2) ================= */
+:root {
+  --hud-glass: rgba(84, 18, 54, 0.88);     /* deep-plum glass: white text ≥ 9:1 even over pure white */
+  --hud-glass-soft: rgba(84, 18, 54, 0.8); /* quieter variant for secondary info (≥ 7:1) */
+  --ease-out: cubic-bezier(.22, 1, .36, 1);
+  --ease-spring: cubic-bezier(.34, 1.56, .64, 1);
+}
+
+/* white text sitting directly on pink (no chip): dark plum edge keeps every glyph crisp */
+.text-legible {
+  text-shadow:
+    0 1px 0 rgba(74, 15, 47, .62),
+    0 2px 4px rgba(74, 15, 47, .42),
+    0 8px 22px rgba(74, 15, 47, .34);
+}
+
+/* text on the 3D scene always rides on one of these (no backdrop-filter: it would be re-blurred every canvas frame) */
+.hud-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: .55rem;
+  color: #fff;
+  background: var(--hud-glass);
+  border: 1.5px solid rgba(255, 255, 255, .45);
+  box-shadow: 0 10px 22px -10px rgba(74, 15, 47, .7), inset 0 1px 0 rgba(255, 255, 255, .16);
+  line-height: 1.3;
+  text-wrap: balance;
+  overflow-wrap: anywhere;
+}
+.hud-chip--soft { background: var(--hud-glass-soft); }
+
+/* the "scroll down to the letter" call to action */
+.scroll-cue {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: .65rem;
+  padding: .72rem 1.1rem .72rem 1.35rem;
+  border-radius: 999px;
+  background: var(--color-butter);
+  color: #4a0f2f;
+  border: 2.5px solid #fff;
+  box-shadow: 0 14px 28px -10px rgba(74, 15, 47, .7), 0 0 0 3px rgba(74, 15, 47, .2);
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.0625rem;
+  line-height: 1.15;
+  letter-spacing: .01em;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform .28s var(--ease-spring), box-shadow .28s ease;
+}
+@media (min-width: 768px) { .scroll-cue { font-size: 1.2rem; padding: .8rem 1.25rem .8rem 1.5rem; } }
+.scroll-cue::after {              /* pulse ring — transform + opacity only */
+  content: "";
+  position: absolute;
+  inset: -3px;
+  border-radius: inherit;
+  border: 3px solid rgba(255, 217, 138, .95);
+  pointer-events: none;
+  animation: cuePing 2.1s ease-out infinite;
+}
+.scroll-cue:hover { transform: translateY(-2px) scale(1.04); }
+.scroll-cue:active { transform: translateY(1px) scale(.97); }
+.scroll-cue:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
+.scroll-cue__chevs { display: inline-flex; flex-direction: column; align-items: center; margin: -.35rem 0; }
+.scroll-cue__chevs .cue-chev { margin: -.42rem 0; animation: cueChev 1.5s ease-in-out infinite; }
+.scroll-cue__chevs .cue-chev:nth-child(2) { animation-delay: .2s; }
+@keyframes cuePing {
+  0%   { transform: scale(1);    opacity: .9; }
+  100% { transform: scale(1.22); opacity: 0; }
+}
+@keyframes cueChev {
+  0%, 100% { transform: translateY(-3px); opacity: .3; }
+  50%      { transform: translateY(3px);  opacity: 1; }
+}
+
+/* memories gallery: mouse drag + wheel (touch keeps its native swipe) */
+.gal-track { outline: none; touch-action: pan-x pan-y; overscroll-behavior-x: contain; }
+.gal-track:focus-visible { box-shadow: inset 0 0 0 3px rgba(255, 255, 255, .85); border-radius: 28px; }
+@media (hover: hover) and (pointer: fine) {
+  .gal-track { cursor: grab; }
+  .gal-track.is-dragging { cursor: grabbing; }
+}
+.gal-track.is-dragging, .gal-track.is-dragging * { user-select: none; -webkit-user-select: none; }
+.gal-track.is-dragging { scroll-snap-type: none; scroll-behavior: auto; }
+.gal-nav {
+  display: none;
+  position: absolute;
+  top: 50%;
+  z-index: 5;
+  width: 3rem;
+  height: 3rem;
+  margin-top: -1.9rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  color: #fff;
+  background: var(--hud-glass);
+  border: 2px solid rgba(255, 255, 255, .8);
+  box-shadow: 0 10px 22px -8px rgba(74, 15, 47, .7);
+  cursor: pointer;
+  transition: transform .25s var(--ease-spring), opacity .25s ease;
+}
+.gal-nav:hover:not(:disabled) { transform: scale(1.1); }
+.gal-nav:active:not(:disabled) { transform: scale(.94); }
+.gal-nav:disabled { opacity: .35; cursor: default; }
+.gal-nav:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
+.gal-nav--prev { left: -.35rem; }
+.gal-nav--next { right: -.35rem; }
+.gal-dot {
+  height: 2.75rem; min-width: 1.5rem; padding: 0 .1rem;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: none; border: 0; cursor: pointer;
+}
+.gal-dot > i { display: block; height: .7rem; width: .7rem; border-radius: 999px; background: rgba(255,255,255,.82);
+  box-shadow: 0 0 0 1.5px rgba(74,15,47,.45); transition: width .3s var(--ease-out), background .3s ease; }
+.gal-dot.on > i { width: 1.9rem; background: #fff; }
+.gal-dot:focus-visible { outline: 3px solid #fff; outline-offset: -2px; border-radius: 999px; }
+.hint-fine { display: none; }
+@media (hover: hover) and (pointer: fine) {
+  .gal-nav { display: inline-flex; }
+  .hint-fine { display: flex; }
+  .hint-coarse { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scroll-cue::after, .scroll-cue__chevs .cue-chev { animation: none; }
+  .scroll-cue::after { opacity: 0; }
+  .scroll-cue, .gal-nav, .gal-dot > i { transition: none; }
 }

@@ -50,11 +50,13 @@ Mở DevTools → Console, thấy `✅ config.json applied` (ở dev / `?debug`)
 | `garland` | chữ trên **dây cờ** treo giữa phòng, mỗi chữ một lá cờ (tối đa 26 ký tự, tự viết hoa, dấu cách = chỗ trống, hỗ trợ tiếng Việt có dấu). Mặc định `"HAPPY BIRTHDAY"`. |
 | `quality` | `"auto"` (mặc định) \| `"high"` \| `"medium"` \| `"low"` — xem mục 4. |
 
-### `memories` — ảnh kỷ niệm (mảng, vuốt ngang để xem)
+### `memories` — ảnh kỷ niệm (mảng)
 ```json
 { "src": "https://…/anh.jpg", "caption": "Chú thích" }
 ```
 `src` là link ảnh hoặc đường dẫn trong thư mục `public/` (ví dụ chép ảnh vào `public/photos/1.jpg` rồi ghi `"src": "photos/1.jpg"`). Phần tử thiếu `src` bị bỏ qua. Mảng rỗng → ẩn mục ảnh.
+
+Cách xem ảnh: **điện thoại** vuốt ngang; **máy tính** kéo chuột (giữ chuột trái rồi kéo, thả ra ảnh tự trượt và dừng đúng giữa một tấm), **lăn con lăn** khi trỏ chuột đang ở trên dải ảnh (mỗi nấc lăn sang một tấm; lăn tới tấm đầu/cuối thì trang tự cuộn tiếp, không bị kẹt), bấm nút ‹ › hai bên, bấm chấm tròn bên dưới, hoặc phím ← → khi dải ảnh đang được chọn.
 
 ### `gifts` — hộp quà (mảng)
 ```json
@@ -78,6 +80,10 @@ Một số khoá hay dùng:
 | `tapToBlow` / `tapToRelight` | *nhấn vào bánh kem để thổi nến / thắp lại nến* |
 | `steps` | 4 nhãn của thanh tiến trình: `["lại gần","cầu nguyện","thổi nến","điều ước"]` |
 | `letterNote` | ghi chú cuối thư (hỗ trợ `**đậm**`) |
+| `scrollHint` | nút vàng ở cuối màn hình tiệc: *Cuộn xuống đọc thư* (bấm vào là tự cuộn tới bức thư) |
+| `memoriesSwipe` | dòng gợi ý xem ảnh trên điện thoại (vuốt ngang) |
+| `memoriesDrag` | dòng gợi ý xem ảnh trên máy tính (kéo chuột / lăn con lăn) |
+| `memoriesPrev` / `memoriesNext` / `memoriesGoto` | nhãn trợ năng của nút ‹ ›, và của các chấm tròn (`{n}` = số thứ tự ảnh) |
 | `pageTitle` | tiêu đề tab trình duyệt |
 
 ## 3. Chèn tên, tuổi… vào chữ (`{placeholder}`)

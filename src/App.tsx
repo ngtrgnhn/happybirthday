@@ -155,7 +155,7 @@ export default function App() {
           <div className="w-16 h-16 rounded-full bg-white/90 soft-shadow-sm flex items-center justify-center text-punch-deep anim-heart">
             <HeartIcon className="w-8 h-8" />
           </div>
-          <p className="font-display font-bold text-white text-lg text-soft-shadow">
+          <p className="font-display font-extrabold text-[#4a0f2f] text-xl md:text-2xl">
             {loadingText}
           </p>
         </div>

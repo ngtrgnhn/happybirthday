@@ -52,6 +52,10 @@ export interface UiTexts {
   memoriesTitle: string;
   memoriesSub: string;
   memoriesSwipe: string;
+  memoriesDrag: string;
+  memoriesPrev: string;
+  memoriesNext: string;
+  memoriesGoto: string;
   /* gifts */
   giftsBadge: string;
   giftsTitle: string;
@@ -145,6 +149,10 @@ export const DEFAULT_CONFIG: PartyConfig = {
     memoriesTitle: "Ảnh kỷ niệm",
     memoriesSub: "mỗi tấm là một ngày vui — vuốt ngang để lật xem từng chút một",
     memoriesSwipe: "vuốt sang ngang để xem từng tấm",
+    memoriesDrag: "kéo chuột hoặc lăn con lăn để lướt xem ảnh",
+    memoriesPrev: "Ảnh trước",
+    memoriesNext: "Ảnh sau",
+    memoriesGoto: "Xem ảnh số {n}",
     giftsBadge: "bí mật nhỏ",
     giftsTitle: "Ba hộp quà",
     giftsSub: "chọn một hộp bằng linh cảm — món quà bên trong là ngẫu nhiên, và chỉ mở được một lần duy nhất",

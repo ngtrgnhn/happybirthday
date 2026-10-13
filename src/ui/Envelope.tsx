@@ -198,12 +198,12 @@ export function Envelope({ config }: { config: PartyConfig }) {
           style={{ animationDelay: "80ms", opacity: stage === "closed" ? 1 : 0 }}
         >
           <div className="rounded-full bg-white/85 soft-shadow-sm px-5 py-2 -rotate-1">
-            <span className="font-display font-bold uppercase tracking-[0.18em] text-[11px] md:text-xs text-punch-deep">
+            <span className="font-display font-bold uppercase tracking-[0.14em] text-[13px] md:text-sm text-[#a8195c]">
               {config.event.kicker}
             </span>
           </div>
           {config.event.title && (
-            <h1 className="paper-script text-center text-[34px] md:text-[42px] leading-tight text-white text-soft-shadow">
+            <h1 className="paper-script text-center text-[34px] md:text-[42px] leading-tight text-white text-legible">
               {config.event.title}
             </h1>
           )}
@@ -263,13 +263,13 @@ export function Envelope({ config }: { config: PartyConfig }) {
                   style={{ zIndex: 35 }}
                 >
                   <div className="rounded-[20px] bg-[linear-gradient(180deg,#fffafc,#fff0f6)] border border-white soft-shadow-sm px-6 py-5">
-                    <p className="font-body text-[10px] uppercase tracking-[0.2em] text-ink-soft font-semibold">
+                    <p className="font-body text-[13px] uppercase tracking-[0.16em] text-ink-soft font-semibold">
                       {T("envelopeLabel")}
                     </p>
                     <p className="font-display font-extrabold text-punch-deep text-3xl md:text-4xl leading-tight">
                       {config.recipient.name}
                     </p>
-                    <p className="mt-2 text-xs text-ink-soft font-medium">
+                    <p className="mt-2 text-sm text-ink-soft font-medium">
                       {T("envelopeFrom")}
                     </p>
                   </div>
@@ -288,7 +288,7 @@ export function Envelope({ config }: { config: PartyConfig }) {
                     <span className="paper-hand !text-[20px] !leading-tight text-[#7c2a50]">
                       {T("envelopeAddress")}
                     </span>
-                    <span className="paper-hand !text-[14px] !leading-tight text-[#7c2a50]/75">
+                    <span className="paper-hand !text-[16px] !leading-tight text-[#7c2a50]">
                       {T("envelopeAddressFrom")}
                     </span>
                   </div>
@@ -386,13 +386,13 @@ export function Envelope({ config }: { config: PartyConfig }) {
         {stage === "closed" && (
           <div className="anim-rise flex flex-col items-center gap-2" style={{ animationDelay: "200ms" }}>
             <HeartIcon className="w-8 h-8 text-white anim-heart" />
-            <p className="font-body text-white/95 text-sm font-medium text-center text-soft-shadow">
+            <p className="hud-chip hud-chip--soft rounded-full px-4 py-2 text-center text-[15px] font-semibold md:text-base">
               {T("envelopeTap")}
             </p>
           </div>
         )}
         {(stage === "flap" || stage === "fly" || stage === "dissolve") && (
-          <p className="font-body text-white/95 text-sm font-medium anim-bob text-center text-soft-shadow">
+          <p className="hud-chip hud-chip--soft anim-bob rounded-full px-4 py-2 text-center text-[15px] font-semibold md:text-base">
             {T("letterFlying")}
           </p>
         )}
@@ -404,8 +404,8 @@ export function Envelope({ config }: { config: PartyConfig }) {
           className="pointer-events-none fixed inset-x-0 bottom-[max(18px,env(safe-area-inset-bottom))] z-30 flex justify-center px-6 anim-rise transition-opacity duration-300"
           style={{ animationDelay: "350ms", opacity: wipe ? 0 : 1 }}
         >
-          <p className="flex items-center gap-2 text-center font-body text-sm font-medium text-white/95 text-soft-shadow">
-            <HeartIcon className="anim-heart h-4 w-4 shrink-0" />
+          <p className="hud-chip hud-chip--soft rounded-full px-4 py-2 text-center text-[15px] font-semibold md:text-base">
+            <HeartIcon className="anim-heart h-4 w-4 shrink-0 text-butter" />
             {T("enterHint")}
           </p>
         </div>

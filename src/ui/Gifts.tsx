@@ -75,8 +75,8 @@ function GiftBox3D({
         </div>
       </div>
       <span
-        className={`mt-3 block font-display font-bold text-sm transition-colors ${
-          state === "idle" ? "text-punch-deep group-hover:text-punch" : "text-ink-soft/60"
+        className={`mt-3 block font-display font-bold text-base transition-colors ${
+          state === "idle" ? "text-[#a8195c] group-hover:text-[#7a1043]" : "text-ink-soft/70"
         }`}
       >
         {label}
@@ -119,21 +119,21 @@ export function GiftPicker({ config }: { config: PartyConfig }) {
       </div>
 
       {chosen !== null && !revealed && (
-        <p className="mt-7 text-center font-body text-ink-soft text-sm animate-pulse">
+        <p className="mt-7 text-center font-body text-ink-soft text-[15px] font-semibold animate-pulse">
           {T("giftOpening")}
         </p>
       )}
 
       {revealed && gift && (
         <div className="relative mx-auto mt-7 max-w-[440px] rounded-[24px] panel-soft soft-shadow-sm px-6 py-6 text-center anim-pop">
-          <span className="absolute -top-3 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-punch px-4 py-1 font-display font-bold text-paper text-xs uppercase tracking-wide soft-shadow-sm">
+          <span className="absolute -top-3 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-[#a8195c] px-4 py-1 font-display font-bold text-paper text-[13px] uppercase tracking-wide soft-shadow-sm">
             <span className="flex items-center gap-1.5">
               <GiftIcon className="w-3.5 h-3.5" /> {T("giftChosen")}
             </span>
           </span>
           <h4 className="font-display font-extrabold text-punch-deep text-2xl mt-2">{gift.title}</h4>
           <p className="mt-2 font-body text-[15px] text-ink-soft leading-relaxed">{gift.message}</p>
-          <p className="mt-3 flex items-center justify-center gap-2 font-body text-xs text-ink-soft/80 italic">
+          <p className="mt-3 flex items-center justify-center gap-2 font-body text-sm text-ink-soft italic">
             <HeartIcon className="w-3.5 h-3.5 text-punch anim-heart" />
             {T("giftNote")}
           </p>
