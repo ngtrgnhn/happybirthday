@@ -5,6 +5,7 @@ import { useParty, Phase } from "../store";
 import { CHAR_OFFSCREEN, CHAR_SPEED, FLAME_Y, CANDY, stands } from "./constants";
 import { toonGradient, bannerTexture, puffTexture, blobShadowTexture } from "./textures";
 import { breath } from "./interaction";
+import { useProfile } from "./quality";
 import { easeOutBack, clamp01 } from "./anim";
 
 type Mode = "hidden" | "walk" | "pray" | "blow" | "banner" | "light";
@@ -27,12 +28,25 @@ interface Sim {
 
 export function Character({ bannerText, bannerSub }: { bannerText: string; bannerSub: string }) {
   const phase = useParty((s) => s.phase);
+  const profile = useProfile();
+  const dressGeo = useMemo(() => {
+    const g = new THREE.CylinderGeometry(.16,.37,.6,profile.fancy ? 64 : 28,12);
+    const p = g.getAttribute('position');
+    for(let i=0;i<p.count;i++) {
+      const x=p.getX(i), z=p.getZ(i), v=(.3-p.getY(i))/.6;
+      const r=Math.hypot(x,z), k=1+Math.sin(Math.atan2(z,x)*18)*.045*v;
+      if(r>0) p.setXYZ(i,x*k,p.getY(i),z*k);
+    }
+    g.computeVertexNormals(); return g;
+  },[profile.fancy]);
+  useEffect(() => () => dressGeo.dispose(),[dressGeo]);
   const api = useParty;
 
   const grad = useMemo(() => toonGradient(), []);
   const tex = useMemo(() => bannerTexture(bannerText, bannerSub), [bannerText, bannerSub]);
   useEffect(() => () => tex.dispose(), [tex]);
   const bannerGeo = useMemo(() => new THREE.PlaneGeometry(2.2, 0.86, 30, 6), []);
+  useEffect(() => () => bannerGeo.dispose(), [bannerGeo]);
   const bannerBase = useMemo(() => Float32Array.from(bannerGeo.getAttribute("position").array as ArrayLike<number>), [bannerGeo]);
   const puffTex = useMemo(() => puffTexture(), []);
   const tmpV = useMemo(() => new THREE.Vector3(), []);
@@ -450,8 +464,7 @@ export function Character({ bannerText, bannerSub }: { bannerText: string; banne
 
         {/* body */}
         <group ref={body} position={[0, 0.36, 0]}>
-          <mesh position={[0, 0.3, 0]}>
-            <cylinderGeometry args={[0.16, 0.37, 0.6, 20]} />
+          <mesh position={[0, 0.3, 0]} geometry={dressGeo}>
             <meshToonMaterial color={CANDY.dress} gradientMap={grad} />
           </mesh>
           <mesh position={[0, 0.015, 0]}>

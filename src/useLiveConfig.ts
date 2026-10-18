@@ -49,8 +49,8 @@ export function useLiveConfig(): LiveConfig {
     let inflight = false;
 
     const apply = (text: string, source: ConfigSource) => {
-      if (!alive) return;
-      if (text === lastText.current) return; // nothing changed → nothing re-renders
+      if (!alive) return false;
+      if (text === lastText.current) { setState(s => s.error ? { ...s, error: null } : s); return true; } // nothing changed → nothing re-renders
       let parsed: unknown;
       try {
         parsed = JSON.parse(text);
@@ -58,12 +58,13 @@ export function useLiveConfig(): LiveConfig {
         const msg = `config.json sai cú pháp: ${(e as Error).message}`;
         console.warn("❌", msg);
         setState((s) => (s.error === msg ? s : { ...s, error: msg }));
-        return;
+        return false;
       }
       lastText.current = text;
       const config = normalizeConfig(parsed);
       if (DEBUG) console.info("✅ config.json applied", { source, config });
       setState((s) => ({ config, source, error: null, revision: s.revision + 1 }));
+      return true;
     };
 
     const fetchNow = async (): Promise<boolean> => {
@@ -75,8 +76,7 @@ export function useLiveConfig(): LiveConfig {
         const text = await res.text();
         // an SPA host may answer a missing file with index.html (200) — treat as failure
         if (/^\s*</.test(text)) throw new Error("config.json không tồn tại (nhận về HTML)");
-        apply(text, "network");
-        return true;
+        return apply(text, "network");
       } catch (e) {
         if (DEBUG) console.warn("config.json fetch failed:", (e as Error).message);
         return false;

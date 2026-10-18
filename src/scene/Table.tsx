@@ -6,6 +6,7 @@ import { toonGradient, laceTexture, blobShadowTexture, glowTexture } from "./tex
 import { useEnv } from "./Env";
 import { Pop } from "./anim";
 import { rig } from "./Lights";
+import { StaticBatch } from "./StaticBatch";
 
 export function BlobShadow({
   position, scale = 1, opacity = 1,
@@ -49,7 +50,7 @@ export function Table() {
   const env = useEnv();
   const skirt = useMemo(() => skirtGeometry(), []);
   return (
-    <group>
+    <StaticBatch><group>
       {/* table top (under the lace) */}
       <mesh position={[0, TABLE_H - 0.03, 0]}>
         <cylinderGeometry args={[TABLE_R + 0.05, TABLE_R + 0.05, 0.06, 80]} />
@@ -70,7 +71,7 @@ export function Table() {
         <meshStandardMaterial color="#ffffff" roughness={0.7} />
       </mesh>
       <BlobShadow position={[0, 0.01, 0]} scale={4.4} opacity={0.75} />
-    </group>
+    </group></StaticBatch>
   );
 }
 
@@ -87,7 +88,7 @@ function GiftBox({
   const mBox = <meshToonMaterial color={box} gradientMap={grad} />;
   const mRib = <meshToonMaterial color={ribbon} gradientMap={grad} />;
   return (
-    <group rotation={[0, rot, 0]}>
+    <StaticBatch><group rotation={[0, rot, 0]}>
       <mesh position={[0, h / 2, 0]}>
         <boxGeometry args={[s, h, s]} />
         {mBox}
@@ -127,7 +128,7 @@ function GiftBox({
         </mesh>
       </group>
       <BlobShadow position={[0, 0.006, 0]} scale={s * 2.6} opacity={0.65} />
-    </group>
+    </group></StaticBatch>
   );
 }
 
@@ -263,7 +264,7 @@ export function Gifts() {
 function Cupcake({ color, frost }: { color: string; frost: string }) {
   const grad = useMemo(() => toonGradient(), []);
   return (
-    <group>
+    <StaticBatch><group>
       <mesh position={[0, 0.045, 0]}>
         <cylinderGeometry args={[0.072, 0.052, 0.09, 16]} />
         <meshToonMaterial color={color} gradientMap={grad} />
@@ -284,7 +285,7 @@ function Cupcake({ color, frost }: { color: string; frost: string }) {
         <sphereGeometry args={[0.021, 10, 8]} />
         <meshStandardMaterial color="#e5223f" roughness={0.18} />
       </mesh>
-    </group>
+    </group></StaticBatch>
   );
 }
 
@@ -336,7 +337,7 @@ function Vase({ flowers }: { flowers: string[] }) {
     [flowers]
   );
   return (
-    <group>
+    <StaticBatch><group>
       <mesh position={[0, 0.07, 0]}>
         <cylinderGeometry args={[0.055, 0.08, 0.14, 16]} />
         <meshStandardMaterial color="#ffffff" roughness={0.12} envMap={env} envMapIntensity={0.9} />
@@ -365,7 +366,7 @@ function Vase({ flowers }: { flowers: string[] }) {
           </group>
         </group>
       ))}
-    </group>
+    </group></StaticBatch>
   );
 }
 

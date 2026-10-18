@@ -1,35 +1,31 @@
-import { create } from "zustand";
+import { create } from 'zustand';
 
-/**
- * Phase machine:
- * loading -> intro (envelope + letter) -> party (3D room + scroll page)
- * party --[click the cake]--> approach (character walks in & prays)
- * approach --[click the cake]--> blowing (zoom in, inhale, blow, flames out)
- * blowing -> blown (banner with wish)
- * blown --[click the cake]--> relight (character relights candles, walks away) -> party
- */
-export type Phase =
-  | "loading"
-  | "intro"
-  | "party"
-  | "approach"
-  | "blowing"
-  | "blown"
-  | "relight";
-
-export const CEREMONY: Phase[] = ["approach", "blowing", "blown", "relight"];
+export type Phase = 'loading' | 'intro' | 'party' | 'approach' | 'blowing' | 'blown' | 'relight';
+export type Panel = 'letter' | 'memories' | 'gifts';
+export type PanelStage = 'idle' | 'zooming-in' | 'opening' | 'open' | 'closing' | 'zooming-out';
+export const CEREMONY: Phase[] = ['approach', 'blowing', 'blown', 'relight'];
 
 interface PartyState {
   phase: Phase;
-  charReady: boolean;      // character arrived & praying -> user may blow
+  sceneFailed: boolean;
+  panel: Panel | null;
+  panelStage: PanelStage;
+  panelFocus: [number,number,number] | null;
+  charReady: boolean;
   candlesLit: boolean;
-  burst: number;           // increment => confetti cannon fires
-  douse: number;           // increment => screen darkens briefly when flames die
-  enteredAt: number | null; // performance.now() when the party doors opened (drives entrance animation)
-  cakeHover: boolean;      // pointer is over the cake (pointer devices only)
-  scrolled: boolean;       // the page has been scrolled away from the 3D hero
-  heroGone: boolean;       // the hero is completely off screen → the 3D scene stops rendering
+  burst: number;
+  douse: number;
+  enteredAt: number | null;
+  cakeHover: boolean;
+  resetView: number;
   enterParty: () => void;
+  openPanel: (panel: Panel, focus?: [number,number,number]) => void;
+  onPanelFocused: () => void;
+  onPanelOpened: () => void;
+  onPanelHidden: () => void;
+  onPanelRestored: () => void;
+  closePanel: () => void;
+  resetCamera: () => void;
   startApproach: () => void;
   onCharacterArrived: () => void;
   requestBlow: () => void;
@@ -40,68 +36,71 @@ interface PartyState {
   finishRelight: () => void;
   fireBurst: () => void;
   setCakeHover: (v: boolean) => void;
-  setScrolled: (v: boolean) => void;
-  setHeroGone: (v: boolean) => void;
 }
 
 export const useParty = create<PartyState>((set, get) => ({
-  phase: "loading",
-  charReady: false,
-  candlesLit: true,
-  burst: 0,
-  douse: 0,
-  enteredAt: null,
-  cakeHover: false,
-  scrolled: false,
-  heroGone: false,
-
+  phase: 'loading', sceneFailed: false, panel: null, panelStage:'idle', panelFocus:null, charReady: false, candlesLit: true,
+  burst: 0, douse: 0, enteredAt: null, cakeHover: false, resetView: 0,
   enterParty: () => {
-    if (get().phase !== "intro") return;
-    set({ phase: "party", burst: get().burst + 1, enteredAt: performance.now() });
+    if (get().phase !== 'intro') return;
+    set({ phase: 'party', burst: get().burst + 1, enteredAt: performance.now() });
   },
-
-  startApproach: () => {
-    if (get().phase !== "party") return;
-    set({ phase: "approach", charReady: false, cakeHover: false });
-  },
-
-  onCharacterArrived: () => set({ charReady: true }),
-
-  requestBlow: () => {
+  openPanel: (panel, focus) => {
     const s = get();
-    if (s.phase === "approach" && s.charReady) set({ phase: "blowing", cakeHover: false });
+    if (s.phase !== 'party' || s.panel || s.panelStage !== 'idle') return;
+    set({ panel, panelFocus:focus ?? null, panelStage:s.sceneFailed ? 'opening' : 'zooming-in', cakeHover:false });
   },
-
-  onFlamesOut: () =>
-    set({ candlesLit: false, douse: get().douse + 1, burst: get().burst + 1 }),
-
-  onBannerShown: () => set({ phase: "blown" }),
-
+  onPanelFocused: () => {
+    if(get().panelStage === 'zooming-in') set({panelStage:'opening'});
+  },
+  onPanelOpened: () => {
+    if(get().panelStage === 'opening') set({panelStage:'open'});
+  },
+  closePanel: () => {
+    const s=get();
+    if(!s.panel || s.panelStage === 'closing' || s.panelStage === 'zooming-out') return;
+    set({panelStage:s.panelStage === 'zooming-in' ? 'zooming-out' : 'closing'});
+  },
+  onPanelHidden: () => {
+    const s=get();
+    if(s.panelStage !== 'closing') return;
+    set(s.sceneFailed ? {panel:null,panelFocus:null,panelStage:'idle'} : {panelStage:'zooming-out'});
+  },
+  onPanelRestored: () => {
+    if(get().panelStage === 'zooming-out') set({panel:null,panelFocus:null,panelStage:'idle'});
+  },
+  resetCamera: () => set({ resetView: get().resetView + 1 }),
+  startApproach: () => {
+    if (get().phase !== 'party' || get().panel || get().sceneFailed) return;
+    set({ phase: 'approach', charReady: false, cakeHover: false });
+  },
+  onCharacterArrived: () => {
+    if (get().phase === 'approach') set({ charReady: true });
+  },
+  requestBlow: () => {
+    if (get().phase === 'approach' && get().charReady) set({ phase: 'blowing', cakeHover: false });
+  },
+  onFlamesOut: () => {
+    const s = get();
+    if (s.phase === 'blowing' && s.candlesLit)
+      set({ candlesLit: false, douse: s.douse + 1, burst: s.burst + 1 });
+  },
+  onBannerShown: () => {
+    if (get().phase === 'blowing' && !get().candlesLit) set({ phase: 'blown' });
+  },
   requestRelight: () => {
-    if (get().phase !== "blown") return;
-    set({ phase: "relight", cakeHover: false });
+    if (get().phase === 'blown') set({ phase: 'relight', cakeHover: false });
   },
-
-  onCandlesRelit: () => set({ candlesLit: true }),
-
-  finishRelight: () => set({ phase: "party", charReady: false }),
-
+  onCandlesRelit: () => {
+    if (get().phase === 'relight') set({ candlesLit: true });
+  },
+  finishRelight: () => {
+    if (get().phase === 'relight' && get().candlesLit) set({ phase: 'party', charReady: false });
+  },
   fireBurst: () => set({ burst: get().burst + 1 }),
-
-  setCakeHover: (v) => {
-    if (get().cakeHover !== v) set({ cakeHover: v });
-  },
-
-  setScrolled: (v) => {
-    if (get().scrolled !== v) set({ scrolled: v });
-  },
-
-  setHeroGone: (v) => {
-    if (get().heroGone !== v) set({ heroGone: v });
-  },
+  setCakeHover: (v) => { if (get().cakeHover !== v) set({ cakeHover: v }); },
 }));
 
-/* Handy for testing / poking around:  open the page with ?debug and use window.__party */
-if (import.meta.env.DEV || new URLSearchParams(window.location.search).has("debug")) {
+if (import.meta.env.DEV || new URLSearchParams(window.location.search).has('debug')) {
   (window as unknown as { __party: typeof useParty }).__party = useParty;
 }

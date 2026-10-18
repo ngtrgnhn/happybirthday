@@ -129,7 +129,7 @@ function Candle({
       g.rotation.x = lean * breath.dz + Math.sin(t * 7.3 + seed) * 0.05;
       if (halo.current) {
         const m = halo.current.material as THREE.SpriteMaterial;
-        const base = 0.55 + (1 - rig.level) * 0.5;
+        const base = 0.26 + (1 - rig.level) * 0.3;
         m.opacity = Math.min(1, ns) * base * (0.85 + Math.sin(t * 13 + seed) * 0.1);
         halo.current.scale.setScalar(0.42 + (1 - rig.level) * 0.25 + Math.sin(t * 9 + seed) * 0.02);
       }
@@ -293,8 +293,9 @@ function Pearls({ tier }: { tier: number }) {
 }
 
 function Rosettes({ tier, color, geo, grad }: { tier: number; color: string; geo: THREE.BufferGeometry; grad: THREE.Texture }) {
+  const profile = useProfile();
   const r = TIER[tier].r - 0.07;
-  const count = tier === 0 ? 24 : tier === 1 ? 18 : 12;
+  const count = profile.tier === "high" ? [34, 26, 18][tier] : [24, 18, 12][tier];
   const y = tierBase(tier) + TIER[tier].h + 0.066;
   const ref = useInstances(count, (i, d) => {
     const a = (i / count) * Math.PI * 2;
@@ -311,38 +312,24 @@ function Rosettes({ tier, color, geo, grad }: { tier: number; color: string; geo
 
 function Strawberries({ grad }: { grad: THREE.Texture }) {
   const tex = useMemo(() => strawberryTexture(), []);
-  const spots = useMemo(() => {
-    const arr: { p: [number, number, number]; s: number; r: number }[] = [];
-    const ring = (tier: number, n: number, off: number, inner: number) => {
-      for (let i = 0; i < n; i++) {
-        const a = (i / n) * Math.PI * 2 + off;
-        arr.push({
-          p: [Math.cos(a) * (TIER[tier].r - inner), tierBase(tier) + TIER[tier].h + 0.1, Math.sin(a) * (TIER[tier].r - inner)],
-          s: 0.075 + (i % 3) * 0.006,
-          r: a,
-        });
-      }
-    };
-    ring(0, 8, 0.3, 0.27);
-    ring(1, 6, 0.8, 0.24);
-    return arr;
-  }, []);
-  return (
-    <group>
-      {spots.map((sp, i) => (
-        <group key={i} position={sp.p} rotation={[0, sp.r, 0]}>
-          <mesh scale={[1, 1.06, 1]}>
-            <sphereGeometry args={[sp.s, 14, 12]} />
-            <meshStandardMaterial map={tex} roughness={0.35} />
-          </mesh>
-          <mesh position={[0, sp.s * 0.92, 0]} rotation={[Math.PI, 0, 0]}>
-            <coneGeometry args={[sp.s * 0.62, sp.s * 0.45, 7]} />
-            <meshToonMaterial color="#79c27d" gradientMap={grad} />
-          </mesh>
-        </group>
-      ))}
-    </group>
-  );
+  const spots = useMemo(() => [0,1].flatMap(tier => {
+    const n = tier === 0 ? 8 : 6;
+    return Array.from({ length:n },(_,i) => {
+      const a = i / n * Math.PI * 2 + (tier === 0 ? .3 : .8);
+      const r = TIER[tier].r - (tier === 0 ? .27 : .24);
+      return { x:Math.cos(a)*r, z:Math.sin(a)*r, y:tierBase(tier)+TIER[tier].h+.1, s:.075+i%3*.006, a };
+    });
+  }), []);
+  const fruit = useInstances(spots.length,(i,d) => {
+    const p=spots[i]; d.position.set(p.x,p.y,p.z); d.rotation.y=p.a; d.scale.set(p.s,p.s*1.06,p.s);
+  },[spots]);
+  const leaf = useInstances(spots.length,(i,d) => {
+    const p=spots[i]; d.position.set(p.x,p.y+p.s*.92,p.z); d.rotation.set(Math.PI,p.a,0); d.scale.set(p.s*.62,p.s*.45,p.s*.62);
+  },[spots]);
+  return <group>
+    <instancedMesh ref={fruit} args={[undefined,undefined,spots.length]} castShadow><sphereGeometry args={[1,18,14]} /><meshStandardMaterial map={tex} roughness={.35} /></instancedMesh>
+    <instancedMesh ref={leaf} args={[undefined,undefined,spots.length]} castShadow><coneGeometry args={[1,1,7]} /><meshToonMaterial color="#79c27d" gradientMap={grad} /></instancedMesh>
+  </group>;
 }
 
 /* ------------------------------------------------------------------ */
@@ -409,7 +396,7 @@ function Topper({ age, text, grad }: { age: number; text: string; grad: THREE.Te
 function CakeRipple() {
   const meshes = useRef<(THREE.Mesh | null)[]>([]);
   const k = useRef(0);
-  const color = useMemo(() => new THREE.Color(2.4, 0.95, 1.7), []);
+  const color = useMemo(() => new THREE.Color(1.15, 0.4, 0.75), []);
   useFrame((state, rawDt) => {
     const dt = Math.min(rawDt, 0.05);
     const hover = useParty.getState().cakeHover ? 1 : 0;
@@ -422,7 +409,7 @@ function CakeRipple() {
       const s = 1 + ph * 0.5;
       m.scale.set(s, s, 1);
       const mat = m.material as THREE.MeshBasicMaterial;
-      mat.opacity = k.current * Math.pow(1 - ph, 1.6) * (0.55 + hover * 0.4);
+      mat.opacity = k.current * Math.pow(1 - ph, 1.6) * (0.22 + hover * 0.18);
       m.visible = k.current > 0.01;
     });
   });
@@ -468,7 +455,7 @@ export function Cake({ candleCount, age, topper }: { candleCount: number; age: n
     const t = state.clock.elapsedTime;
     const hover = useParty.getState().cakeHover;
     if (light.current) {
-      const target = candlesLit ? (hover ? 2.3 : 1.8) : 0;
+      const target = candlesLit ? (hover ? 0.85 : 0.65) : 0;
       light.current.intensity = THREE.MathUtils.damp(
         light.current.intensity,
         target * (1 + Math.sin(t * 13) * 0.08 + Math.sin(t * 29 + 2) * 0.05),
@@ -560,7 +547,7 @@ export function Cake({ candleCount, age, topper }: { candleCount: number; age: n
         ref={light}
         position={[0, FLAME_Y + 0.22, 0.1]}
         color="#ffb066"
-        intensity={1.8}
+        intensity={0.65}
         distance={7}
         decay={1.7}
       />

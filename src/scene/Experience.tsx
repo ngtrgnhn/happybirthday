@@ -16,6 +16,7 @@ import { EnvProvider } from "./Env";
 import { RigLights } from "./Lights";
 import { Shadowed } from "./anim";
 import { cakeIsClickable } from "./interaction";
+import { FloatingKeepsakes } from "./FloatingKeepsakes";
 import { TABLE_H } from "./constants";
 
 /**
@@ -105,6 +106,7 @@ export function Experience({ config }: { config: PartyConfig }) {
       </Shadowed>
 
       <Garland text={config.scene.garland} />
+      <FloatingKeepsakes config={config} />
 
       <FloatingHearts />
       <Glitter />

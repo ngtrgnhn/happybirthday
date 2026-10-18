@@ -1,22 +1,14 @@
-import { useParty } from "../store";
-import { scrollState } from "./CameraRig";
+import { useParty } from '../store';
+import { gesture } from './gesture';
 
-/** True when a press on the cake should do something right now. */
 export function cakeIsClickable(): boolean {
   const s = useParty.getState();
-  if (s.phase === "party") return scrollState.y < 0.3; // only while the 3D hero is on screen
-  if (s.phase === "approach") return s.charReady;
-  return s.phase === "blown";
+  if (s.panel || gesture.blocked()) return false;
+  return s.phase === 'party' || s.phase === 'approach' && s.charReady || s.phase === 'blown';
 }
-
-/** True when balloons may be popped (free browsing of the hero only). */
-export function balloonsPoppable(): boolean {
+export function roomIsInteractive(): boolean {
   const s = useParty.getState();
-  return s.phase === "party" && scrollState.y < 0.3;
+  return s.phase === 'party' && !s.panel && !gesture.blocked();
 }
-
-/**
- * Written by the character while she blows, read by the candle flames
- * so they lean away from her breath. (dx, dz) points from her to the cake.
- */
+export const balloonsPoppable = roomIsInteractive;
 export const breath = { active: false, dx: 0, dz: -1 };

@@ -69,6 +69,30 @@ export interface UiTexts {
   footerBy: string;
   footerNote: string;
   pageTitle: string;
+  roomLetter: string;
+  roomMemories: string;
+  roomGifts: string;
+  roomLetterSub: string;
+  roomMemoriesSub: string;
+  roomGiftsSub: string;
+  roomOrbitHint: string;
+  roomClickHint: string;
+  roomClose: string;
+  roomUniverse: string;
+  roomReset: string;
+  roomQuality: string;
+  roomQualityAuto: string;
+  roomQualityHigh: string;
+  roomQualityMedium: string;
+  roomQualityLow: string;
+  roomCandleAction: string;
+  roomPanelBadge: string;
+  roomPanelLoading: string;
+  roomImageUnavailable: string;
+  roomImageRetry: string;
+  roomGalleryHint: string;
+  roomEmptyMemories: string;
+  roomNoWebGL: string;
 }
 
 export interface PartyConfig {
@@ -104,7 +128,7 @@ export const DEFAULT_CONFIG: PartyConfig = {
     heading: "Gửi bạn,",
     body: "Hôm nay là ngày của cậu. Tớ đã định viết thật dài, nhưng rồi nhận ra có những điều chỉ cần nói gọn trong một câu. Cảm ơn cậu vì một năm qua đã luôn ở đó — dịu dàng, kiên nhẫn và ấm áp theo cách không ai thay thế được.",
     wish: "Điều ước duy nhất tớ gửi vào ngọn nến: mong tuổi mới của cậu luôn rạng rỡ như chính cậu của hôm nay — phần còn lại của thế giới, cứ để tụi tớ lo.",
-    ps: "Tái bút: cuộn xuống chút nữa nhé, tớ giấu vài thứ nhỏ xinh ở dưới đó.",
+    ps: "Tái bút: xoay nhìn quanh phòng nhé, tớ giấu vài món nhỏ xinh bên chiếc bánh kem.",
   },
   banner: { text: "TUỔI MỚI RỰC RỠ NHÉ!", sub: "thương cậu nhiều hơn hôm qua, ít hơn ngày mai" },
   cake: { candles: 5, flavor: "kem dâu", topper: "HB" },
@@ -120,8 +144,32 @@ export const DEFAULT_CONFIG: PartyConfig = {
     blown: "Điều ước đã bay lên cùng làn khói",
     relight: "Ánh lửa nhỏ trở lại, bữa tiệc tiếp tục",
   },
-  scene: { garland: "HAPPY BIRTHDAY", quality: "auto" },
+  scene: { garland: "HAPPY BIRTHDAY", quality: "high" },
   ui: {
+    roomLetter: "Lá thư",
+    roomMemories: "Kỷ niệm",
+    roomGifts: "Quà bí mật",
+    roomLetterSub: "một lời thương gửi cậu",
+    roomMemoriesSub: "{n} mảnh ký ức",
+    roomGiftsSub: "một chút bất ngờ",
+    roomOrbitHint: "Kéo để xoay · Cuộn hoặc chụm hai ngón để thu phóng",
+    roomClickHint: "Chạm bánh kem hoặc những món đồ lơ lửng để khám phá",
+    roomClose: "Trở về bữa tiệc",
+    roomUniverse: "MỘT VŨ TRỤ NHỎ DÀNH CHO",
+    roomReset: "Về góc nhìn ban đầu",
+    roomQuality: "Chất lượng đồ họa",
+    roomQualityAuto: "Tự động",
+    roomQualityHigh: "Chi tiết cao",
+    roomQualityMedium: "Cân bằng",
+    roomQualityLow: "Tiết kiệm",
+    roomCandleAction: "Thổi nến",
+    roomPanelBadge: "NHỮNG ĐIỀU NHỎ XINH",
+    roomPanelLoading: "Đang mở món quà nhỏ…",
+    roomImageUnavailable: "Ảnh này chưa tải được.",
+    roomImageRetry: "Thử lại",
+    roomGalleryHint: "Vuốt hoặc dùng phím ← → để lật từng tấm ảnh",
+    roomEmptyMemories: "Những kỷ niệm mới đang chờ được viết.",
+    roomNoWebGL: "Trình duyệt chưa mở được cảnh 3D. Bạn vẫn có thể đọc thư, xem ảnh và mở quà qua các nút bên dưới.",
     envelopeLabel: "Lá thư dành cho",
     envelopeFrom: "từ {sender} — mở ra đọc nhé",
     envelopeAddress: "Gửi: {name}",
@@ -144,7 +192,7 @@ export const DEFAULT_CONFIG: PartyConfig = {
     letterBadge: "phong thư đã mở",
     letterTitle: "Lá thư dành cho {nickname}",
     letterSub: "nắn nót từng chữ, chỉ chờ {nickname} đọc — một lời chúc duy nhất nằm ngay trong đó",
-    letterNote: "đọc xong thì cuộn lên lại, tới gần bánh kem và **thổi nến** nhé — điều ước chỉ linh nghiệm khi nến tắt.",
+    letterNote: "Đọc xong hãy trở về bữa tiệc và chạm bánh kem để **thổi nến** nhé.",
     memoriesBadge: "năm qua của tụi mình",
     memoriesTitle: "Ảnh kỷ niệm",
     memoriesSub: "mỗi tấm là một ngày vui — vuốt ngang để lật xem từng chút một",
@@ -216,9 +264,6 @@ export function normalizeConfig(raw: unknown): PartyConfig {
         .filter((g) => g.title || g.message)
     : D.gifts;
 
-  const q = str(sceneRaw.quality, D.scene.quality).toLowerCase();
-  const quality: QualityPref = q === "high" || q === "medium" || q === "low" ? q : "auto";
-
   const ui = strings(uiRaw, D.ui) as UiTexts;
   ui.steps =
     Array.isArray(uiRaw.steps) && uiRaw.steps.length > 0
@@ -243,7 +288,7 @@ export function normalizeConfig(raw: unknown): PartyConfig {
     memories,
     gifts,
     hints: strings(o.hints, D.hints),
-    scene: { garland: str(sceneRaw.garland, D.scene.garland), quality },
+    scene: { garland: str(sceneRaw.garland, D.scene.garland), quality: "high" },
     ui,
   };
 }
